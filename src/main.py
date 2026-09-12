@@ -1,23 +1,19 @@
-# from typing import TypeDict, List
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langchain_mistralai import ChatMistralAI
 from dotenv import load_dotenv
+from tools import get_weather
 import httpx
 
-# class TravelState(TypeDict):
-#     origin: str
-#     destination: str
-#     budget: float
-#     days: int
-#     itinerary: str
-#     interests: List[str]
-
 load_dotenv()
+
 model = ChatMistralAI(model="voxtral-small-2507")
+
+tools = [get_weather]
+model_with_tools = model.bind_tools(tools)
 
 def travel_agent(state: MessagesState):
     try: 
-        response = model.invoke(state["messages"])
+        response = model_with_tools.invoke(state["messages"])
 
         return {
             "messages": [response]
@@ -47,10 +43,10 @@ result = graph.invoke(
         "messages": [
             {
                 "role": "user",
-                "content": "I want to travel from Paris to Amsterdam for 3 days."
+                "content": "What's the weather in Amsterdam?"
             }
         ]
     }
 )
 
-print(result["messages"][-1].content)
+print(result["messages"][-1])
