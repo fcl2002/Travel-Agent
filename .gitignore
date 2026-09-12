@@ -1,0 +1,6 @@
+.env
+.venv
+__pychace__/
+*.pyc
+
+GUIDE.md
