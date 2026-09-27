@@ -1,9 +1,11 @@
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from langchain_core.messages import SystemMessage
 from langgraph.prebuilt import tools_condition
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 from tools import tools, tool_node
+from datetime import date
 import httpx
 
 load_dotenv()
@@ -15,7 +17,28 @@ memory = MemorySaver()
 
 def travel_agent(state: MessagesState):
     try: 
-        response = model_with_tools.invoke(state["messages"])
+        today = date.today()
+
+        system_prompt = f"""
+        You are a travel planning assistant.
+
+        Today's date is {today.isoformat()}.
+
+        Date interpretation rules:
+        - Resolve relative dates such as "today", "tomorrow", "next Friday",
+        and "next weekend" relative to today's date.
+        - If the user provides a date without a year, assume {today.year}.
+        - Never invent another year.
+        - If the resulting date would be in the past, ask the user to clarify.
+        - Always provide dates to tools in YYYY-MM-DD format.
+        - If a date cannot be determined confidently, ask the user for clarification.
+        """
+
+        messages = [
+            SystemMessage(content=system_prompt),
+            *state["messages"]
+        ]
+        response = model_with_tools.invoke(messages)
 
         return {
             "messages": [response]

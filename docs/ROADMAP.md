@@ -10,7 +10,7 @@
 
 2. Real Traver Data
 
-- [ ] Add a real weather tooal (get_weather(city, date)); 
+- [X] Add a real weather tool (get_weather(city, date)); 
 - [ ] Add a places/attractions tool (get_events(city, date, interests[]));
 - [ ] Handle API errors and unavailable data.
 
