@@ -1,14 +1,17 @@
 from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import tools_condition
-from langchain_mistralai import ChatMistralAI
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 from tools import tools, tool_node
 import httpx
 
 load_dotenv()
 
-model = ChatMistralAI(model="voxtral-small-2507")
+model = ChatGroq(model="openai/gpt-oss-20b")
 model_with_tools = model.bind_tools(tools)
+
+memory = MemorySaver()
 
 def travel_agent(state: MessagesState):
     try: 
@@ -38,20 +41,33 @@ builder.add_edge(START, "travel_agent")
 builder.add_conditional_edges("travel_agent", tools_condition)
 builder.add_edge("tools", "travel_agent")
 
-graph = builder.compile()
+graph = builder.compile(checkpointer=memory)
 
-result = graph.invoke(
-    {
-        "messages": [
-            {
-                "role": "user",
-                "content": "What's the weather in Amsterdam?"
-            }
-        ]
+config = {
+    "configurable": {
+        "thread_id": "user-1"
     }
-)
+}
 
-for message in result["messages"]:
-    print(type(message).__name__)
-    print(message)
-    print("---")
+while True:
+    user_input = input("\nYou: ")
+
+    if user_input.lower() in ["exit", "quit"]:
+        break
+
+    result = graph.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ]
+        },
+        config=config
+    )
+
+    response = result["messages"][-1]
+
+    print("\nAgent: ")
+    print(response.content)

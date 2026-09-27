@@ -3,4 +3,4 @@
 __pychace__/
 *.pyc
 
-GUIDE.md
+models.py
