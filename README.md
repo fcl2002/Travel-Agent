@@ -11,17 +11,18 @@ The goal is to build an agent that helps any user create a personalized travel i
 
 ## First Prototype
 
-The first prototype will focus on validating the core architecture of the agent and its ability to use external data to support travel planning.
+The first prototype focuses on validating the core architecture of the agent and its ability to use external data to support travel planning.
 
-In this first version, the system should:
+The current version already supports:
 
-- Allow users to interact with the agent through a command-line interface (CLI).
-- Maintain conversation context across multiple messages.
-- Use **LangGraph** to manage the agent workflow and state.
-- Use an LLM through the **Groq API**.
-- Allow the model to use external tools through tool calling.
-- Integrate at least two real external data sources, such as weather information and points of interest.
-- Identify important trip information such as destination, dates, interests, and budget.
-- Generate an initial personalized travel itinerary.
+- Interaction through a command-line interface (CLI).
+- Multi-turn conversations with conversation memory.
+- **LangGraph** for agent workflow, state management, and conditional routing.
+- **Groq API** as the LLM provider.
+- Tool calling through LangGraph's `ToolNode`.
+- A weather tool using the **Open-Meteo API**.
+- City geocoding to convert location names into coordinates before requesting weather data.
+- Weather forecast validation for dates outside the supported forecast range.
+- System-level instructions to help the model interpret dates consistently and avoid invalid tool calls.
 
-From this prototype, the project will gradually evolve to include more structured itinerary planning, budget validation, transportation and accommodation data, persistent storage, a backend API, and eventually a web interface.
+The next steps are to add more real travel data sources, especially points of interest, structure trip information such as destination, dates, interests, and budget, and generate a complete personalized itinerary.
