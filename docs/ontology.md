@@ -20,9 +20,7 @@ We're going to use the ontology to help us identify the cheapest way to travel b
 
 ## Who will use and maintain the ontology?
 
-The users are students and whoever one that wants to discover France and its culture without spending to much money. The ontology will be maintained by two Computer Engineering students that love to travel, [Fernando Lasmar](https://www.linkedin.com/in/fernando-lasmar/) and [Vivian Fragoso](https://www.linkedin.com/in/vivian-fragoso/).
-
----
+The users are students and anyone who wants to discover France and its culture without spending too much money. The ontology will be maintained by [Fernando Lasmar](https://www.linkedin.com/in/fernando-lasmar/) and [Vivian Fragoso](https://www.linkedin.com/in/vivian-fragoso/), two Computer Engineering students who love to travel.
 
 ## Use Cases 
 
@@ -40,6 +38,7 @@ The users are students and whoever one that wants to discover France and its cul
 > ### Finding the cheapest same-day round-trip itinerary
 > A group of students wants to travel to Mont Saint-Michel on specific weekend in November. They don't want to spend the night there. They would like to depart from Paris in the morning and return after 5pm, to make the most of their day. They are looking for the cheapest transport option with an early departure time, what would you recommend ?
 
+## References
 
-
-
+[TripPlanningOntology]: https://github.com/houssamallali/TripPlanningOntology/blob/main/README.md
+[GEOFLA]: https://earthportal.eu/ontologies/GEOFLA

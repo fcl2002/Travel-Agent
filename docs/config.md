@@ -1,12 +1,12 @@
-## How to Run the Current Prototype
+# How to Run the Current Version
 
 The project is currently designed to run locally through a command-line interface (CLI).
 
 ### 1. Clone the repository
 
 ```powershell
-git clone <repository-url>
-cd travel-agent
+$ git clone https://github.com/fcl2002/Travel-Agent.git
+$ cd travel-agent
 ```
 
 This file contains the basic commands required to activate the virtual environment and run the project on Windows using VS Code and PowerShell.
@@ -26,7 +26,7 @@ $ pip install -r requirements.txt
 
 ## 3. Configure environment variables
 
-Create a .env file in the project root and add your Groq API key:
+Create a .env file in the project root and add your LLM API key:
 
 ```powershell
 GROQ_API_KEY=your_api_key_here
