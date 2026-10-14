@@ -52,7 +52,10 @@ owl:Thing
 
 ## References
 
-> Note: Our ontology is based on the open-source [Trip Planning Ontology][TripPlanningOntology], developed by houssamallali. We are progressively adapting and extending its classes, properties, and relationships to meet our project's requirements.
+> Note: Our ontology is based on the open-source [Trip Planning Ontology][trip-ontology], developed by houssamallali. 
+> 
+> We are progressively adapting and extending its classes, properties, and relationships to meet our project's requirements, initially focusing on affordable domestic
+> travel within France.
 
-[TripPlanningOntology]: https://github.com/houssamallali/TripPlanningOntology/blob/main/README.md
+[trip-ontology]: https://github.com/houssamallali/TripPlanningOntology/blob/main/README.md
 [GEOFLA]: https://earthportal.eu/ontologies/GEOFLA
