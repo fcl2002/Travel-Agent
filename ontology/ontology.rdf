@@ -1,0 +1,621 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/"
+     xml:base="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:terms="http://purl.org/dc/terms/"
+     xmlns:TripPlanningOntology="http://example.com/TripPlanningOntology#">
+    <owl:Ontology rdf:about="http://example.com/TripPlanningOntology">
+        <terms:creator>Houssam Allali</terms:creator>
+        <rdfs:label>Trip Planning Ontology</rdfs:label>
+        <owl:versionInfo>v1.0</owl:versionInfo>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/dc/terms/creator -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/creator"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#date -->
+
+    <rdfs:Datatype rdf:about="http://example.com/TripPlanningOntology#date"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#hasDestination -->
+
+    <owl:ObjectProperty rdf:about="http://example.com/TripPlanningOntology#hasDestination">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Stop"/>
+        <rdfs:comment>Arrival location</rdfs:comment>
+        <rdfs:label>hasDestination</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#hasItinerary -->
+
+    <owl:ObjectProperty rdf:about="http://example.com/TripPlanningOntology#hasItinerary">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Itinerary"/>
+        <rdfs:comment>Links a Trip Plan to one or more Itinerary objects (Trip Segments). An itinerary can contain departure and arrival times, modes, and connections.</rdfs:comment>
+        <rdfs:label>hasItinerary</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#hasOrigin -->
+
+    <owl:ObjectProperty rdf:about="http://example.com/TripPlanningOntology#hasOrigin">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Stop"/>
+        <rdfs:comment>Departure location</rdfs:comment>
+        <rdfs:label>hasOrigin</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#hasSegment -->
+
+    <owl:ObjectProperty rdf:about="http://example.com/TripPlanningOntology#hasSegment">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Itinerary"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#hasWeather -->
+
+    <owl:ObjectProperty rdf:about="http://example.com/TripPlanningOntology#hasWeather">
+        <owl:inverseOf rdf:resource="http://example.com/TripPlanningOntology#isWeatherFor"/>
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#isWeatherFor -->
+
+    <owl:ObjectProperty rdf:about="http://example.com/TripPlanningOntology#isWeatherFor"/>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasAffordance -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasAffordance">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Operation"/>
+        <rdfs:comment>“Points to a Web of Things affordance describing how an operation can be invoked (e.g., REST endpoint, MQTT topic, etc.).”</rdfs:comment>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasConnection -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasConnection">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Connection"/>
+        <rdfs:comment>“Indicates that a trip segment involves at least one Connection, requiring passengers to change vehicles or carriers.”</rdfs:comment>
+        <rdfs:label>has connection</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasMode -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasMode">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationMode"/>
+        <rdfs:comment>“States which Transportation Mode (train, bus, plane, etc.) is used for this Trip Segment.”</rdfs:comment>
+        <rdfs:label>has mode</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasOperation -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasOperation">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlanningService"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Operation"/>
+        <rdfs:comment>“Associates a Trip Planning Service with the operations it provides (e.g., planning, booking, schedule lookup).”</rdfs:comment>
+        <rdfs:label>has operation</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasPricingModel -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasPricingModel">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:comment>“Identifies which Pricing Model (fixed or dynamic) applies to this Trip Segment. Useful for cost calculation or agent’s reasoning about fare changes.”</rdfs:comment>
+        <rdfs:label>has pricing model</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasReturnTrip -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasReturnTrip">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#InverseFunctionalProperty"/>
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/RoundTripPlan"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:comment>“Connects a round trip plan to its return trip segment, if any. Generally used when modeling a round journey with outbound and return details.”</rdfs:comment>
+        <rdfs:label>has return trip</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasStop -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasStop">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationLine"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Stop"/>
+        <rdfs:comment>“Indicates all the stops serviced by a particular Transportation Line, in order or not. Each stop is a distinct location.”</rdfs:comment>
+        <rdfs:label>has stop</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/usesTransportationLine -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/usesTransportationLine">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationLine"/>
+        <rdfs:comment>“Specifies which Transportation Line is used for a given Trip Segment (e.g., which train or bus line a traveler rides).”</rdfs:comment>
+        <rdfs:label>uses transportation line</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#conditions -->
+
+    <owl:DatatypeProperty rdf:about="http://example.com/TripPlanningOntology#conditions">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#forecastDate -->
+
+    <owl:DatatypeProperty rdf:about="http://example.com/TripPlanningOntology#forecastDate">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#pricePerNight -->
+
+    <owl:DatatypeProperty rdf:about="http://example.com/TripPlanningOntology#pricePerNight">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#requestedDepartureDate -->
+
+    <owl:DatatypeProperty rdf:about="http://example.com/TripPlanningOntology#requestedDepartureDate">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:label>requestedDepartureDate</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#requestedReturnDate -->
+
+    <owl:DatatypeProperty rdf:about="http://example.com/TripPlanningOntology#requestedReturnDate">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/RoundTripPlan"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:label>requestedReturnDate</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#temperature -->
+
+    <owl:DatatypeProperty rdf:about="http://example.com/TripPlanningOntology#temperature">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+        <rdfs:label>The avergae temprature of the eather during the trip.</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#windSpeed -->
+
+    <owl:DatatypeProperty rdf:about="http://example.com/TripPlanningOntology#windSpeed">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/arrivalInput -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/arrivalInput">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment>“The user’s textual input indicating the destination location for the trip plan (e.g., ‘London’).”</rdfs:comment>
+        <rdfs:label>arrival input</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/departureDateInput -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/departureDateInput">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <rdfs:comment>“Specifies the planned departure date and time (in ISO dateTime format) for the forward journey.”</rdfs:comment>
+        <rdfs:label>departure date input</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/departureInput -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/departureInput">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment>“The user’s (or agent’s) textual input representing the origin location (e.g., ‘Paris’). Could be a city name, station code, or geolocation.”</rdfs:comment>
+        <rdfs:label>departure input</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/duration -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/duration">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <rdfs:comment>“Total travel time for the segment, typically expressed in minutes.”</rdfs:comment>
+        <rdfs:label>duration</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/isInternational -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/isInternational">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+        <rdfs:label>is international</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/maxConnectionsAllowed -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/maxConnectionsAllowed">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/PlanTripOperation"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <rdfs:comment>“Specifies the maximum number of transfers/connections permitted when planning an itinerary. Useful for limiting overly complex multi‐leg trips.”</rdfs:comment>
+        <rdfs:label>max connections allowed</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/modeName -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/modeName">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationMode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment>“Human‐readable name of the transportation mode (e.g. ‘Train’, ‘Bus’, ‘Airplane’), to be displayed in user interfaces.”</rdfs:comment>
+        <rdfs:label>mode name</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/price -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/price">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <rdfs:comment>“Represents the base fare or cost (as a decimal number) for a single Trip Segment. Usually expressed in a specific currency.”</rdfs:comment>
+        <rdfs:label>price</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/priceCurrency -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/priceCurrency">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment>“ISO currency code or textual label (e.g., ‘USD’, ‘EUR’) specifying the currency for the ‘price’ value of this segment.”</rdfs:comment>
+        <rdfs:label>price currency</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/remainingSeats -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/remainingSeats">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <rdfs:comment>“Number of seats still available for booking on this segment. Can help an agent decide whether to show an alert for limited availability.”</rdfs:comment>
+        <rdfs:label>remaining seats</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/returnDateInput -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/returnDateInput">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <rdfs:comment>“Specifies the planned departure date and time for the return journey (if applicable). Relevant primarily in round trip contexts.”</rdfs:comment>
+        <rdfs:label>return date input</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/transferTime -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/transferTime">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Connection"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <rdfs:comment>“Time available/required for passengers to switch from one vehicle to another. Important in multi‐segment journeys.”</rdfs:comment>
+        <rdfs:label>transfer time</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#OneWayTrip -->
+
+    <owl:Class rdf:about="http://example.com/TripPlanningOntology#OneWayTrip">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:comment>A specialized trip plan containing at least one forward trip segment.</rdfs:comment>
+        <rdfs:label>One Way Trip Plan</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Connection -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Connection">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/transferTime"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment>“A scheduled link between two trip segments where the passenger changes vehicles (or carriers). May involve transfer time, possibly in a station or hub.”</rdfs:comment>
+        <rdfs:label>Connection</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Itinerary -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Itinerary">
+        <rdfs:comment>“Represents a structured travel plan detailing how to go from an origin to a destination, potentially including multiple modes of transport and segments.”</rdfs:comment>
+        <rdfs:label>Itinerary</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Operation -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Operation">
+        <rdfs:comment>“A generic type of action that can be performed on a Trip Planning Service. Examples include trip planning requests, ticket booking, or retrieving schedule information.”</rdfs:comment>
+        <rdfs:label>Operation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/PlanTripOperation -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/PlanTripOperation">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Operation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/maxConnectionsAllowed"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment>“A specialized operation that allows the user (or an agent) to request a trip plan based on input parameters, such as origin, destination, dates, and possibly other constraints (like max connections).”</rdfs:comment>
+        <rdfs:label>Plan Trip Operation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/RoundTripPlan -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/RoundTripPlan">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan"/>
+        <rdfs:comment>A specialized trip plan containing at least one forward trip segment and a corresponding return trip. Often includes separate outbound and return dates.</rdfs:comment>
+        <rdfs:label>Round Trip Plan</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Stop -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Stop">
+        <rdfs:comment>“A station or stop along a transportation line where passengers can board or alight. May be a bus stop, train station, airport terminal, etc.”</rdfs:comment>
+        <rdfs:label>Stop</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationLine -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationLine">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/hasStop"/>
+                <owl:minQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:minQualifiedCardinality>
+                <owl:onClass rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Stop"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment>“A named or coded line (e.g., a bus line or train line) that services specific stops. Multiple segments can use the same line.”</rdfs:comment>
+        <rdfs:label>Transportation Line</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationMode -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationMode">
+        <rdfs:comment>“Indicates the travel mode used in a trip segment, such as train, bus, airplane, rideshare, or ferry.”</rdfs:comment>
+        <rdfs:label>Transportation Mode</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlan">
+        <rdfs:comment>“Encapsulates a complete travel plan, which may comprise one or more itineraries or trip segments. It includes details like departure, arrival, and optional return.”</rdfs:comment>
+        <rdfs:label>Trip Plan</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlanningService -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripPlanningService">
+        <rdfs:comment>“Represents an online platform or service that offers trip planning functionality (e.g., route finders, itinerary generation). It typically supports one or more operations (like searching for itineraries).”</rdfs:comment>
+        <rdfs:label>Trip Planning Service</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TripSegment">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/usesTransportationLine"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/TransportationLine"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/duration"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment>“A single continuous portion of travel, typically with a single vehicle (e.g., a single train ride or bus ride). Multiple segments can make up a complete itinerary or trip plan.”</rdfs:comment>
+        <rdfs:label>Trip Segment</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#ItineraryBus -->
+
+    <owl:NamedIndividual rdf:about="http://example.com/TripPlanningOntology#ItineraryBus">
+        <rdf:type rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Itinerary"/>
+        <rdfs:label>Itinerary Bus</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#ItineraryFlight -->
+
+    <owl:NamedIndividual rdf:about="http://example.com/TripPlanningOntology#ItineraryFlight">
+        <rdf:type rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Itinerary"/>
+        <rdfs:label>Itinerary Flight</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#ItineraryTrain -->
+
+    <owl:NamedIndividual rdf:about="http://example.com/TripPlanningOntology#ItineraryTrain">
+        <rdf:type rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/Itinerary"/>
+        <rdfs:label>Itinerary Train</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://example.com/TripPlanningOntology#ParisNiceRoundTrip -->
+
+    <owl:NamedIndividual rdf:about="http://example.com/TripPlanningOntology#ParisNiceRoundTrip">
+        <rdf:type rdf:resource="http://www.semanticweb.org/allalihoussam/ontologies/2025/3/untitled-ontology-11/RoundTripPlan"/>
+        <TripPlanningOntology:hasItinerary rdf:resource="http://example.com/TripPlanningOntology#ItineraryBus"/>
+        <TripPlanningOntology:hasItinerary rdf:resource="http://example.com/TripPlanningOntology#ItineraryFlight"/>
+        <TripPlanningOntology:hasItinerary rdf:resource="http://example.com/TripPlanningOntology#ItineraryTrain"/>
+        <TripPlanningOntology:requestedDepartureDate>&quot;2026-10-17&quot;</TripPlanningOntology:requestedDepartureDate>
+        <TripPlanningOntology:requestedReturnDate>&quot;2026-10-18&quot;</TripPlanningOntology:requestedReturnDate>
+        <rdfs:label>Paris Nice Round Trip</rdfs:label>
+    </owl:NamedIndividual>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi -->
+

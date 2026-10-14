@@ -25,7 +25,7 @@ The users are students and anyone who wants to discover France and its culture w
 ## Use Cases 
 
 ### 1st Case
- Finding the cheapest round-trip option for fixed dates
+> ### Finding the cheapest round-trip option for fixed dates
 > I'd like to travel to Nice for one night on 17 and 18 October 2026, and then return to Paris. I have €100 to spend on transport. What is the cheapest way to make the most of my weekend there?
 
 ### 2nd Case
@@ -38,7 +38,21 @@ The users are students and anyone who wants to discover France and its culture w
 > ### Finding the cheapest same-day round-trip itinerary
 > A group of students wants to travel to Mont Saint-Michel on specific weekend in November. They don't want to spend the night there. They would like to depart from Paris in the morning and return after 5pm, to make the most of their day. They are looking for the cheapest transport option with an early departure time, what would you recommend ?
 
+## Ontology Class Hierarchy
+
+```text
+owl:Thing
+│
+├── Itinerary
+├── Trip Plan
+│   ├── One Way Trip
+│   └── Round Trip Plan
+└── Trip Segment
+```
+
 ## References
+
+> Note: Our ontology is based on the open-source [Trip Planning Ontology][TripPlanningOntology], developed by houssamallali. We are progressively adapting and extending its classes, properties, and relationships to meet our project's requirements.
 
 [TripPlanningOntology]: https://github.com/houssamallali/TripPlanningOntology/blob/main/README.md
 [GEOFLA]: https://earthportal.eu/ontologies/GEOFLA
