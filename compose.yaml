@@ -1,0 +1,40 @@
+services:
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-travel_agent}:${POSTGRES_PASSWORD:-travel_agent_dev}@db:5432/${POSTGRES_DB:-travel_agent}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/db', timeout=5)"
+      interval: 10s
+      timeout: 6s
+      retries: 5
+      start_period: 10s
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-travel_agent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-travel_agent_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-travel_agent}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_data:

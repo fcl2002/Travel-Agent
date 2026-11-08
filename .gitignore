@@ -1,6 +1,9 @@
 .env
+.env.*
+!.env.example
 .venv
-__pychace__/
+__pycache__/
 *.pyc
+.pytest_cache/
 
 models.py
