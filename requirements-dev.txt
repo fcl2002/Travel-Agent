@@ -1,2 +1,3 @@
 -r requirements.txt
+anyio==4.16.0
 pytest==9.2.0

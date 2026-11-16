@@ -3,8 +3,9 @@ from logging.config import fileConfig
 from sqlalchemy import create_engine, pool
 
 from alembic import context
-from src.config import get_settings
-from src.database import Base
+from app.core.config import get_settings
+from app.db.base import Base
+from app.db.tables.user import UserModel  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -43,6 +44,12 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def run_migrations(connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
@@ -50,15 +57,17 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    connection = config.attributes.get("connection")
+    if connection is not None:
+        run_migrations(connection)
+        return
+
     connectable = create_engine(get_settings().database_url, poolclass=pool.NullPool)
-
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
-
-        with context.begin_transaction():
-            context.run_migrations()
+    try:
+        with connectable.connect() as connection:
+            run_migrations(connection)
+    finally:
+        connectable.dispose()
 
 
 if context.is_offline_mode():

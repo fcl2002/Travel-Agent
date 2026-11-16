@@ -5,9 +5,9 @@
 .venv
 .env
 .env.*
-__pycache__
-*.pyc
-.pytest_cache
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
 tests
 docs
 ontology

@@ -1,6 +1,6 @@
 # How to Run the Current Version
 
-The project is currently designed to run locally through a command-line interface (CLI).
+The project includes a FastAPI backend and a separate command-line agent in `agent/`.
 
 ### 1. Clone the repository
 
@@ -26,18 +26,33 @@ $ pip install -r requirements.txt
 
 ## 3. Configure environment variables
 
-Create a .env file in the project root and add your LLM API key:
+Copy `.env.example` to `.env` if it does not already exist. The backend uses
+`DATABASE_URL`. To use the command-line agent, also add your LLM API key:
 
 ```powershell
 GROQ_API_KEY=your_api_key_here
 ```
 
-## 4. Run the project
+## 4. Run the backend
+
+With Docker Desktop running and the virtual environment active:
+
+```powershell
+docker compose up -d --wait db
+python -m alembic upgrade head
+python -m uvicorn app.main:app --reload
+```
+
+Open `http://127.0.0.1:8000/docs`. Stop the API with `Ctrl+C`.
+Run the complete test suite, including PostgreSQL and server startup checks,
+with `python -m pytest`.
+
+## 5. Run the agent
 
 You can start the agent with:
 
 ```powershell
-$ python src/main.py
+$ python agent/main.py
 ```
 
 or
@@ -46,7 +61,7 @@ or
 $ .\run.ps1
 ```
 
-## 5. Stop the agent
+## 6. Stop the agent
 
 ```powershell
 $ exit
