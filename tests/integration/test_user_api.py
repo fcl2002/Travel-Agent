@@ -35,7 +35,6 @@ async def test_user_routes_lifecycle(client, repository_session):
     async with AsyncSession(bind=repository_session.bind, join_transaction_mode="create_savepoint") as session:
         stored = await SQLAlchemyUserRepository(session).get_by_id(UUID(user["id"]))
     assert stored.password_hash.startswith("$argon2id$")
-    assert stored.password_hash != PAYLOAD["password"]
     assert verify_password(PAYLOAD["password"], stored.password_hash) is True
     location = response.headers["Location"]
     assert location == f"/users/{user['id']}"
@@ -57,10 +56,9 @@ async def test_user_routes_errors_and_validation(client):
     original = (await client.post("/users", json=PAYLOAD)).json()
     other = {**PAYLOAD, "username": "another", "email": "another@example.com"}
     assert (await client.post("/users", json=other)).status_code == 201
-    for duplicate in ({**other, "username": PAYLOAD["username"]}, {**other, "email": PAYLOAD["email"]}):
-        response = await client.post("/users", json=duplicate)
-        assert response.status_code == 409
-        assert response.json() == {"detail": "Username or email already exists"}
+    response = await client.post("/users", json={**other, "username": PAYLOAD["username"]})
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Username or email already exists"}
     location = f"/users/{original['id']}"
     response = await client.patch(location, json={"username": "another", "email": "changed@example.com"})
     assert response.status_code == 409

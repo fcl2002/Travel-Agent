@@ -33,7 +33,8 @@ app/
   schemas/
     user.py                       # UserCreate, UserUpdate, and public UserRead
     error.py                      # ErrorResponse for domain errors
-  services/                       # Reserved for application services
+  services/
+    user_service.py               # User operations and password-hashing coordination
 agent/
   main.py
   tools.py
@@ -53,7 +54,7 @@ timestamp, and the active flag.
 FastAPI or SQLAlchemy.
 
 `repositories/user_repository.py` defines the contract using entities and Python
-values. Future services can depend on this contract without knowing about database
+values. `UserService` depends on this contract without knowing about database
 sessions or ORM objects. The concrete SQLAlchemy implementation converts between
 entities and table records, awaits queries, and translates uniqueness errors.
 The contract's methods are asynchronous: callers use `await repository.add(user)`,
@@ -73,21 +74,29 @@ FastAPI's function scope, so commit or rollback completes before the response is
 sent. Every repository participating in a sequence must use the same session.
 
 `api/dependencies.py` is the composition point for the existing HTTP dependencies.
-Endpoint functions use repository and database-probe contracts, rather than
-SQLAlchemy types. `get_user_repository` wires the concrete repository to the
-request's shared transactional session.
+User endpoints depend on `UserService`; health endpoints use the database-probe
+contract. `get_user_repository` wires the concrete repository to the request's
+shared transactional session, and `get_user_service` injects that repository
+into the service. SQLAlchemy details stay out of both user routes and the service.
 Changing database technology can require changes to adapters, dependency wiring,
 connection configuration, and migrations. It does not require rewriting the user
 entity or repository contract. Database-specific integration tests also need to
 follow the selected backend.
 
-`core/logging.py` remains a placeholder; `services/` is reserved
-for later application services. User routes currently coordinate the basic
-repository calls directly. Authentication and ownership checks
+`UserService` coordinates creation, retrieval, pagination, partial updates, and
+deactivation. It creates the entity, computes Argon2id hashes through the core
+utility in a worker thread, and raises `UserNotFoundError` for missing lookups.
+It accepts ordinary Python values and returns entities; it does not import HTTP
+schemas, FastAPI, or SQLAlchemy. Routes handle request/response conversion and
+HTTP metadata, while schemas validate incoming data. The service does not open,
+commit, or roll back transactions: the existing session boundary owns the entire
+operation sequence.
+
+`core/logging.py` remains a placeholder. Authentication and ownership checks
 are deferred; the routes have no authentication dependency.
 
 `UserCreate` validates username, email, and `password`, represented by `SecretStr`.
-The API hashes the password through `core/security.py` before creating the entity;
+The service hashes the password through `core/security.py` before creating the entity;
 clients cannot supply `password_hash`. `UserUpdate` accepts only username and email, rejects
 empty requests and explicit nulls, and leaves other fields under application
 control. Both reject unknown fields. `UserRead` uses an explicit field allowlist
@@ -137,7 +146,8 @@ library-default parameters, generating a random salt for every hash. It also
 provides password verification, returning false for mismatches and invalid hashes.
 Password whitespace is preserved; blank passwords are rejected by the input schema,
 which currently accepts 1 to 512 characters. Hashing is run in a worker thread by
-the async creation endpoint, keeping the core utility independent of FastAPI.
+the async user service using `asyncio.to_thread`, keeping the service and core
+utility independent of FastAPI.
 Passwords and hashes are excluded from public responses and validation errors.
 No schema migration is needed because the existing hash column is reused.
 

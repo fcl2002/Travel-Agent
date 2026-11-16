@@ -79,7 +79,9 @@ Example creation body:
 }
 ```
 
-Creation receives `password` and computes an Argon2id hash on the backend with a
+Routes delegate user operations to `app/services/user_service.py`, which depends
+on the repository contract and leaves transaction control to the shared session.
+Creation receives `password` and computes an Argon2id hash in the service with a
 random salt per hash. Hashing runs in a worker thread to avoid blocking the async
 API. The repository receives only the resulting hash; clients cannot submit
 `password_hash`. `app/core/security.py` provides `hash_password` and
