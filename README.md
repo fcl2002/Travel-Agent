@@ -56,6 +56,39 @@ with the Compose URL template.
 The existing command-line agent can be started with `python agent/main.py`
 after configuring its API keys.
 
+## User API
+
+User management is available without authentication in this implementation stage.
+The Swagger documentation at `/docs` contains the request and response schemas.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| POST | `/users` | Create a user; returns 201 and a Location header |
+| GET | `/users?limit=100&offset=0` | List users, including inactive users |
+| GET | `/users/{user_id}` | Get public user details |
+| PATCH | `/users/{user_id}` | Update username and/or email |
+| PATCH | `/users/{user_id}/deactivate` | Set the user inactive without deleting the record |
+
+Example creation body:
+
+```json
+{
+  "username": "traveler",
+  "email": "traveler@example.com",
+  "password_hash": "already-computed-password-hash"
+}
+```
+
+Password hashing and authentication will be implemented separately. Creation
+currently receives a precomputed hash, as required by the repository; it does not
+compute or verify the hash. Public responses contain `id`, `username`, `email`,
+`created_at`, `update_at`, and `is_active`, with no password or hash fields.
+Updates accept a nonempty subset of username/email; null values, unknown fields,
+and client-supplied account metadata are rejected with 422. Missing users return
+404 and duplicate usernames/emails return 409. Errors roll back the request's
+transaction. Validation errors report field locations and messages without
+echoing submitted values.
+
 ## Docker and PostgreSQL
 
 With Docker Desktop running, start the API and PostgreSQL 18:

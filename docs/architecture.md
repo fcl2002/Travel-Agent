@@ -8,8 +8,10 @@ app/
   main.py                         # FastAPI application and ASGI entry point
   api/
     dependencies.py               # Wire concrete adapters to HTTP dependencies
+    exception_handlers.py         # 404/409 mappings and safe validation errors
     endpoints/
       health.py                   # Existing /health and /health/db endpoints
+      users.py                    # Create, list, read, update, and deactivate users
   core/
     config.py                     # Environment and .env settings
     exceptions.py                 # Application errors without database dependencies
@@ -28,7 +30,9 @@ app/
     database_probe.py             # Database health-check contract
     sqlalchemy/
       user_repository.py          # SQLAlchemyUserRepository implementation
-  schemas/                        # Reserved for request and response schemas
+  schemas/
+    user.py                       # UserCreate, UserUpdate, and public UserRead
+    error.py                      # ErrorResponse for domain errors
   services/                       # Reserved for application services
 agent/
   main.py
@@ -69,16 +73,27 @@ FastAPI's function scope, so commit or rollback completes before the response is
 sent. Every repository participating in a sequence must use the same session.
 
 `api/dependencies.py` is the composition point for the existing HTTP dependencies.
-Endpoint functions use the database-probe contract, rather than SQLAlchemy types.
+Endpoint functions use repository and database-probe contracts, rather than
+SQLAlchemy types. `get_user_repository` wires the concrete repository to the
+request's shared transactional session.
 Changing database technology can require changes to adapters, dependency wiring,
 connection configuration, and migrations. It does not require rewriting the user
 entity or repository contract. Database-specific integration tests also need to
 follow the selected backend.
 
-`core/logging.py` and `core/security.py` are placeholders. `schemas/` and `services/`
-contain only version-control placeholders. No user endpoints, services, password
-hashing, or new logging behavior are introduced by this reorganization. Existing
-health endpoints remain in `api/endpoints/health.py`.
+`core/logging.py` and `core/security.py` remain placeholders; `services/` is reserved
+for later application services. User routes currently coordinate the basic
+repository calls directly. Authentication, ownership checks, and password hashing
+are deferred; the routes have no authentication dependency.
+
+`UserCreate` validates username, email, and a caller-supplied password hash, matching
+the existing entity contract. `UserUpdate` accepts only username and email, rejects
+empty requests and explicit nulls, and leaves other fields under application
+control. Both reject unknown fields. `UserRead` uses an explicit field allowlist
+and attribute-based validation to return public entity data without the hash.
+Domain errors are mapped to 404/409 using `ErrorResponse`. Invalid request data
+returns the standard 422 error structure, excluding submitted values and error
+context that could contain sensitive data.
 
 ## User repository behavior
 
@@ -144,5 +159,7 @@ protecting their outer transactions. The schemas and test data are
 rolled back afterward. Tests verify both successful commits and rollback of a
 multi-operation sequence (deactivation followed by insertion) on uniqueness or
 missing-user errors, reading the result
-through a separate session. Run `python -m pytest -m "not integration"` for the tests
+through a separate session. Two HTTP integration scenarios cover user lifecycle,
+validation, error responses, hash exclusion, and rollback after an update conflict
+using the real PostgreSQL repository. Run `python -m pytest -m "not integration"` for the tests
 that do not require PostgreSQL or a listening HTTP server.

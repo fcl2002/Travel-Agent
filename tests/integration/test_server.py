@@ -44,7 +44,7 @@ def test_server_starts_and_connects_to_postgresql(database_url, tmp_path):
                 assert response.status_code == 200 and "swagger-ui" in response.text
                 response = client.get("/openapi.json")
                 assert response.status_code == 200
-                assert "/health/db" in response.json()["paths"]
+                assert {"/health/db", "/users", "/users/{user_id}"} <= response.json()["paths"].keys()
         finally:
             if process.poll() is None:
                 process.terminate()
