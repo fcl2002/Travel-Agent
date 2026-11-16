@@ -75,13 +75,16 @@ Example creation body:
 {
   "username": "traveler",
   "email": "traveler@example.com",
-  "password_hash": "already-computed-password-hash"
+  "password": "A user supplied password!"
 }
 ```
 
-Password hashing and authentication will be implemented separately. Creation
-currently receives a precomputed hash, as required by the repository; it does not
-compute or verify the hash. Public responses contain `id`, `username`, `email`,
+Creation receives `password` and computes an Argon2id hash on the backend with a
+random salt per hash. Hashing runs in a worker thread to avoid blocking the async
+API. The repository receives only the resulting hash; clients cannot submit
+`password_hash`. `app/core/security.py` provides `hash_password` and
+`verify_password`; authentication and login remain a later step.
+Public responses contain `id`, `username`, `email`,
 `created_at`, `update_at`, and `is_active`, with no password or hash fields.
 Updates accept a nonempty subset of username/email; null values, unknown fields,
 and client-supplied account metadata are rejected with 422. Missing users return

@@ -18,16 +18,16 @@ class UserCreate(BaseModel):
 
     username: Username
     email: Email
-    password_hash: SecretStr = Field(
+    password: SecretStr = Field(
         min_length=1, max_length=512,
-        description="Already computed password hash. No password hashing is performed by this API yet.",
+        description="Password to hash with Argon2id. Never returned in API responses.",
     )
 
-    @field_validator("password_hash")
+    @field_validator("password")
     @classmethod
-    def validate_password_hash(cls, value: SecretStr) -> SecretStr:
+    def validate_password(cls, value: SecretStr) -> SecretStr:
         if not value.get_secret_value().strip():
-            raise ValueError("Password hash must not be empty")
+            raise ValueError("Password must not be empty")
         return value
 
 

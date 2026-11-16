@@ -1,13 +1,16 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import verify_password
 from app.db.session import get_session, transaction
 from app.main import create_app
+from app.repositories.sqlalchemy.user_repository import SQLAlchemyUserRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.anyio]
-PAYLOAD = {"username": "traveler", "email": "traveler@example.com", "password_hash": "precomputed-hash"}
+PAYLOAD = {"username": "traveler", "email": "traveler@example.com", "password": "A user supplied password!"}
 
 
 @pytest.fixture
@@ -23,12 +26,17 @@ async def client(repository_session):
         yield client
 
 
-async def test_user_routes_lifecycle(client):
+async def test_user_routes_lifecycle(client, repository_session):
     response = await client.post("/users", json=PAYLOAD)
     assert response.status_code == 201
     user = response.json()
     assert set(user) == {"id", "username", "email", "created_at", "update_at", "is_active"}
     assert user["is_active"] is True and user["update_at"] is None
+    async with AsyncSession(bind=repository_session.bind, join_transaction_mode="create_savepoint") as session:
+        stored = await SQLAlchemyUserRepository(session).get_by_id(UUID(user["id"]))
+    assert stored.password_hash.startswith("$argon2id$")
+    assert stored.password_hash != PAYLOAD["password"]
+    assert verify_password(PAYLOAD["password"], stored.password_hash) is True
     location = response.headers["Location"]
     assert location == f"/users/{user['id']}"
     assert (await client.get(location)).json() == user
@@ -63,11 +71,12 @@ async def test_user_routes_errors_and_validation(client):
                                ("PATCH", f"{missing}/deactivate", None)):
         response = await client.request(method, path, json=body)
         assert response.status_code == 404 and response.json() == {"detail": "User not found"}
-    for body in ({**PAYLOAD, "email": "invalid"}, {**PAYLOAD, "password_hash": " "},
-                 {**PAYLOAD, "username": " "}, {**PAYLOAD, "is_active": False}):
+    for body in ({**PAYLOAD, "email": "invalid"}, {**PAYLOAD, "password": " "},
+                 {**PAYLOAD, "username": " "}, {**PAYLOAD, "is_active": False},
+                 {**PAYLOAD, "password_hash": "client-supplied-hash"}):
         response = await client.post("/users", json=body)
         assert response.status_code == 422
-        assert PAYLOAD["password_hash"] not in response.text
+        assert PAYLOAD["password"] not in response.text
     for body in ({}, {"email": None}, {"password_hash": "private-hash"}):
         response = await client.patch(location, json=body)
         assert response.status_code == 422 and "private-hash" not in response.text

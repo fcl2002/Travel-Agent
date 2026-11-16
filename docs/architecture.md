@@ -16,7 +16,7 @@ app/
     config.py                     # Environment and .env settings
     exceptions.py                 # Application errors without database dependencies
     logging.py                    # Reserved; no logging implementation yet
-    security.py                   # Reserved; no password hashing implementation yet
+    security.py                   # Argon2id password hashing and verification
   db/
     base.py                       # SQLAlchemy declarative Base and metadata
     session.py                    # Async engine and request-scoped AsyncSession
@@ -81,13 +81,14 @@ connection configuration, and migrations. It does not require rewriting the user
 entity or repository contract. Database-specific integration tests also need to
 follow the selected backend.
 
-`core/logging.py` and `core/security.py` remain placeholders; `services/` is reserved
+`core/logging.py` remains a placeholder; `services/` is reserved
 for later application services. User routes currently coordinate the basic
-repository calls directly. Authentication, ownership checks, and password hashing
+repository calls directly. Authentication and ownership checks
 are deferred; the routes have no authentication dependency.
 
-`UserCreate` validates username, email, and a caller-supplied password hash, matching
-the existing entity contract. `UserUpdate` accepts only username and email, rejects
+`UserCreate` validates username, email, and `password`, represented by `SecretStr`.
+The API hashes the password through `core/security.py` before creating the entity;
+clients cannot supply `password_hash`. `UserUpdate` accepts only username and email, rejects
 empty requests and explicit nulls, and leaves other fields under application
 control. Both reject unknown fields. `UserRead` uses an explicit field allowlist
 and attribute-based validation to return public entity data without the hash.
@@ -131,7 +132,14 @@ should not nest another `transaction(session)` around their operations.
 
 Username and email matching is exact and case-sensitive. Usernames allow up to
 255 characters, emails up to 320. The entity receives an already computed password
-hash; hashing will be implemented later in `core/security.py`.
+hash. `core/security.py` uses argon2-cffi's `PasswordHasher` with Argon2id and
+library-default parameters, generating a random salt for every hash. It also
+provides password verification, returning false for mismatches and invalid hashes.
+Password whitespace is preserved; blank passwords are rejected by the input schema,
+which currently accepts 1 to 512 characters. Hashing is run in a worker thread by
+the async creation endpoint, keeping the core utility independent of FastAPI.
+Passwords and hashes are excluded from public responses and validation errors.
+No schema migration is needed because the existing hash column is reused.
 
 ## Running and testing
 
@@ -160,6 +168,6 @@ rolled back afterward. Tests verify both successful commits and rollback of a
 multi-operation sequence (deactivation followed by insertion) on uniqueness or
 missing-user errors, reading the result
 through a separate session. Two HTTP integration scenarios cover user lifecycle,
-validation, error responses, hash exclusion, and rollback after an update conflict
+validation, error responses, Argon2id persistence, hash exclusion, and rollback after an update conflict
 using the real PostgreSQL repository. Run `python -m pytest -m "not integration"` for the tests
 that do not require PostgreSQL or a listening HTTP server.

@@ -5,9 +5,11 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response, status
+from starlette.concurrency import run_in_threadpool
 
 from app.api.dependencies import get_user_repository
 from app.core.exceptions import UserNotFoundError
+from app.core.security import hash_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.error import ErrorResponse
@@ -22,9 +24,10 @@ Repository = Annotated[UserRepository, Depends(get_user_repository)]
     responses={409: {"model": ErrorResponse}}, summary="Create a user",
 )
 async def create_user(data: UserCreate, repository: Repository, response: Response) -> User:
+    password_hash = await run_in_threadpool(hash_password, data.password.get_secret_value())
     user = await repository.add(User.create(
         username=data.username, email=str(data.email),
-        password_hash=data.password_hash.get_secret_value(),
+        password_hash=password_hash,
     ))
     response.headers["Location"] = f"/users/{user.id}"
     return user
