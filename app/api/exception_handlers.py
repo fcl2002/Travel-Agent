@@ -5,11 +5,20 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.core.exceptions import (
-    AuthenticationError, AuthRateLimitError, UserAlreadyExistsError, UserNotFoundError,
+    AuthenticationError, AuthRateLimitError, PasswordUnchangedError,
+    UserAlreadyExistsError, UserNotFoundError,
 )
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(PasswordUnchangedError)
+    async def password_unchanged(request: Request, exc: PasswordUnchangedError) -> JSONResponse:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "New password must be different from the current password"},
+            headers={"Cache-Control": "no-store"},
+        )
+
     @app.exception_handler(AuthenticationError)
     async def invalid_credentials(request: Request, exc: AuthenticationError) -> JSONResponse:
         return JSONResponse(

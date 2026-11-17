@@ -72,7 +72,7 @@ account. The Swagger **Authorize** button accepts the token returned by login.
 | POST | `/auth/logout` | Revoke this login session and clear the cookie |
 | GET | `/users/me` | Get the authenticated account |
 | GET | `/users/{user_id}` | Get your own account; other IDs return 404 |
-| PATCH | `/users/{user_id}` | Update your own username and/or email |
+| PATCH | `/users/{user_id}` | Update your own username, email, and/or password |
 | PATCH | `/users/{user_id}/deactivate` | Deactivate your own account without deleting it |
 
 The global user-list endpoint is no longer exposed. There are no administrator
@@ -90,22 +90,31 @@ Example creation body:
 
 Routes delegate user operations to `app/services/user_service.py`, which depends
 on the repository contract and leaves transaction control to the shared session.
-Creation receives `password` and computes an Argon2id hash in the service with a
-random salt per hash. Hashing runs in a worker thread to avoid blocking the async
+Creation and password updates receive `password` and compute an Argon2id hash in
+the service with a random salt per hash. Hashing runs in a worker thread to avoid blocking the async
 API. The repository receives only the resulting hash; clients cannot submit
 `password_hash`. `app/core/security.py` provides `hash_password` and
-`verify_password`. Registration and login require passwords of 8–128 characters.
-Registration additionally requires at least one uppercase letter, one digit (0–9),
-and one ASCII punctuation character, such as `!`, `@`, `#`, `$`, or `%`.
+`verify_password`. Registration, login, and password updates require passwords of
+8–128 characters. Registration and password updates additionally require at least
+one uppercase letter, one digit (0–9), and one ASCII punctuation character, such as
+`!`, `@`, `#`, `$`, or `%`.
 Whitespace is preserved and does not count as a special character. Login checks
 length only, so existing accounts can authenticate with their original passwords.
 Public responses contain `id`, `username`, `email`,
 `created_at`, `update_at`, and `is_active`, with no password or hash fields.
-Updates accept a nonempty subset of username/email; null values, unknown fields,
-and client-supplied account metadata are rejected with 422. Missing users return
+Updates accept a nonempty subset of username/email/password; null values, unknown
+fields, and client-supplied account metadata are rejected with 422. Missing users return
 404 and duplicate usernames/emails return 409. Errors roll back the request's
 transaction. Validation errors report field locations and messages without
 echoing submitted values.
+
+To change the authenticated user's password, send `PATCH /users/{user_id}` with
+`Authorization: Bearer <access_token>` and a body such as
+`{"password": "New password123!"}`. Only the account owner may update it.
+The new password follows the same schema validation as registration and replaces
+the stored hash; subsequent logins must use the new password.
+The new password must differ from the current password. Reusing the current
+password returns 400 and leaves all submitted account changes unapplied.
 
 Login example:
 

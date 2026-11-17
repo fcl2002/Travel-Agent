@@ -145,6 +145,7 @@ async def test_auth_rejects_bad_credentials_tokens_and_foreign_accounts(client):
     assert (await client.get("/users/me")).json() == own
     for method, path, body in (("GET", f"/users/{other['id']}", None),
                                ("PATCH", f"/users/{other['id']}", {"username": "hijacked"}),
+                               ("PATCH", f"/users/{other['id']}", {"password": "Hijacked123!"}),
                                ("PATCH", f"/users/{other['id']}/deactivate", None)):
         response = await client.request(method, path, json=body)
         assert response.status_code == 404
@@ -174,6 +175,88 @@ async def register_and_login(client):
     response = await client.post("/auth/login", json={"email": PAYLOAD["email"], "password": PAYLOAD["password"]})
     assert response.status_code == 200
     return response
+
+
+async def test_password_update_requires_authentication_and_hashes_password(client, repository_session):
+    login = await register_and_login(client)
+    authorization = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    user = (await client.get("/users/me", headers=authorization)).json()
+    location = f"/users/{user['id']}"
+    password = "  New password123!  "
+
+    for headers in ({}, {"Authorization": "Bearer invalid-token"}):
+        response = await client.patch(location, json={"password": password}, headers=headers)
+        assert response.status_code == 401
+
+    async with transaction(repository_session):
+        original = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+        assert verify_password(PAYLOAD["password"], original.password_hash)
+
+    response = await client.patch(location, json={"password": password}, headers=authorization)
+    assert response.status_code == 200
+    updated = response.json()
+    assert updated == {**user, "update_at": updated["update_at"]}
+    assert updated["update_at"] is not None
+    assert "password" not in updated and "password_hash" not in updated
+    assert password not in response.text
+
+    async with transaction(repository_session):
+        stored = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+        assert stored.password_hash.startswith("$argon2id$")
+        assert stored.password_hash != original.password_hash
+        assert verify_password(password, stored.password_hash)
+        assert not verify_password(PAYLOAD["password"], stored.password_hash)
+
+    credentials = {"email": PAYLOAD["email"], "password": PAYLOAD["password"]}
+    assert (await client.post("/auth/login", json=credentials)).status_code == 401
+    assert (await client.post("/auth/login", json={**credentials, "password": password})).status_code == 200
+    # Updating profile data must preserve the new password hash.
+    assert (await client.patch(location, json={"username": "updated"}, headers=authorization)).status_code == 200
+    async with transaction(repository_session):
+        unchanged = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+        assert unchanged.password_hash == stored.password_hash
+
+
+@pytest.mark.parametrize("change_password_first", [False, True])
+async def test_password_update_rejects_current_password(client, repository_session, change_password_first):
+    login = await register_and_login(client)
+    client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
+    user = (await client.get("/users/me")).json()
+    location = f"/users/{user['id']}"
+    password = PAYLOAD["password"]
+    if change_password_first:
+        password = "New password123!"
+        assert (await client.patch(location, json={"password": password})).status_code == 200
+
+    async with transaction(repository_session):
+        before = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+
+    response = await client.patch(location, json={"username": "changed", "password": password})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "New password must be different from the current password"}
+    assert response.headers["Cache-Control"] == "no-store"
+    assert password not in response.text and before.password_hash not in response.text
+    async with transaction(repository_session):
+        after = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+        assert after == before
+        assert verify_password(password, after.password_hash)
+
+
+async def test_invalid_password_updates_leave_account_unchanged(client, repository_session):
+    login = await register_and_login(client)
+    client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
+    user = (await client.get("/users/me")).json()
+    for password in (None, "", "Abcde1!", "A1!" + "a" * 126, "abcdef1!", "Abcdefg!",
+                     "Abcdef12", "Abcdef1 ", "Abcdef1\n", "        "):
+        response = await client.patch(f"/users/{user['id']}", json={"username": "changed", "password": password})
+        assert response.status_code == 422
+        assert all("input" not in error for error in response.json()["detail"])
+        if password and password.strip():
+            assert password not in response.text
+    assert (await client.get("/users/me")).json() == user
+    async with transaction(repository_session):
+        stored = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+        assert verify_password(PAYLOAD["password"], stored.password_hash)
 
 
 async def test_failed_reactivation_rolls_back_user_and_sessions(client, repository_session, monkeypatch):

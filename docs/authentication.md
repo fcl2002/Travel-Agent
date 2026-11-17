@@ -4,13 +4,22 @@ Tokens do not belong in the user entity. Login creates a row in `auth_sessions`,
 linked to the user. That row stores only the refresh token's hash and lifecycle
 metadata. Separate logins, such as two devices, have independent sessions.
 
-Registration (`POST /users`) and login (`POST /auth/login`) require passwords of
-8 to 128 characters, inclusive. Registration also requires at least one uppercase
-letter, one digit (0–9), and one ASCII punctuation character, such as `!`, `@`, `#`,
-`$`, or `%`. Whitespace is preserved and does not count as a special character.
+Registration (`POST /users`), login (`POST /auth/login`), and password updates
+require passwords of 8 to 128 characters, inclusive. Registration and password
+updates also require at least one uppercase letter, one digit (0–9), and one ASCII
+punctuation character, such as `!`, `@`, `#`, `$`, or `%`. Whitespace is preserved
+and does not count as a special character.
 Login validates length only, allowing existing accounts to authenticate with their
 original passwords. Invalid registration passwords and password lengths outside
-these bounds return 422 before authentication is attempted.
+these bounds return 422.
+
+Authenticated users can change their own password with `PATCH /users/{user_id}`
+and a JSON body containing `password`. This field shares the registration schema's
+length and complexity checks. The service hashes it with Argon2id before saving;
+responses never include the password or its hash. Missing or invalid bearer tokens
+return 401, and attempts to update another account return 404.
+The service verifies the new password against the current hash before hashing it.
+If they match, the request returns 400 and no account fields are changed.
 
 ## API flow
 

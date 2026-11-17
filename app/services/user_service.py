@@ -4,8 +4,8 @@ import asyncio
 from dataclasses import replace
 from uuid import UUID
 
-from app.core.exceptions import UserNotFoundError
-from app.core.security import hash_password
+from app.core.exceptions import PasswordUnchangedError, UserNotFoundError
+from app.core.security import hash_password, verify_password
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
@@ -31,12 +31,17 @@ class UserService:
 
     async def update(
         self, user_id: UUID, *, username: str | None = None, email: str | None = None,
+        password: str | None = None,
     ) -> User:
         user = await self.get(user_id)
         changes = {
             name: value for name, value in (("username", username), ("email", email))
             if value is not None
         }
+        if password is not None:
+            if await asyncio.to_thread(verify_password, password, user.password_hash):
+                raise PasswordUnchangedError()
+            changes["_password_hash"] = await asyncio.to_thread(hash_password, password)
         return await self.repository.update(replace(user, **changes))
 
     async def deactivate(self, user_id: UUID) -> User:

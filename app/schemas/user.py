@@ -6,12 +6,39 @@ from typing import Annotated
 from uuid import UUID
 
 from pydantic import (
-    BaseModel, ConfigDict, EmailStr, Field, SecretStr, StringConstraints,
-    field_validator, model_validator,
+    AfterValidator, BaseModel, ConfigDict, EmailStr, Field, SecretStr, StringConstraints,
+    model_validator,
 )
 
 Username = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 Email = Annotated[EmailStr, Field(max_length=320)]
+
+
+def validate_password(value: SecretStr) -> SecretStr:
+    password = value.get_secret_value()
+    if not password.strip():
+        raise ValueError("Password must not be empty")
+    if not any(character.isupper() for character in password):
+        raise ValueError("Password must contain at least one uppercase letter")
+    if not any(character in "0123456789" for character in password):
+        raise ValueError("Password must contain at least one digit (0-9)")
+    if not any(character in punctuation for character in password):
+        raise ValueError("Password must contain at least one special character (e.g. !@#$%)")
+    return value
+
+
+Password = Annotated[
+    SecretStr,
+    Field(
+        min_length=8, max_length=128,
+        description=(
+            "8–128 characters, including at least one uppercase letter, one digit "
+            "(0–9), and one ASCII punctuation character (e.g. !@#$%). "
+            "Hashed with Argon2id; never returned in API responses."
+        ),
+    ),
+    AfterValidator(validate_password),
+]
 
 
 class UserCreate(BaseModel):
@@ -19,28 +46,7 @@ class UserCreate(BaseModel):
 
     username: Username
     email: Email
-    password: SecretStr = Field(
-        min_length=8, max_length=128,
-        description=(
-            "8–128 characters, including at least one uppercase letter, one digit "
-            "(0–9), and one ASCII punctuation character (e.g. !@#$%). "
-            "Hashed with Argon2id; never returned in API responses."
-        ),
-    )
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, value: SecretStr) -> SecretStr:
-        password = value.get_secret_value()
-        if not password.strip():
-            raise ValueError("Password must not be empty")
-        if not any(character.isupper() for character in password):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not any(character in "0123456789" for character in password):
-            raise ValueError("Password must contain at least one digit (0-9)")
-        if not any(character in punctuation for character in password):
-            raise ValueError("Password must contain at least one special character (e.g. !@#$%)")
-        return value
+    password: Password
 
 
 class UserUpdate(BaseModel):
@@ -48,6 +54,7 @@ class UserUpdate(BaseModel):
 
     username: Username | None = None
     email: Email | None = None
+    password: Password | None = None
 
     @model_validator(mode="after")
     def validate_changes(self) -> "UserUpdate":

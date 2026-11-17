@@ -50,11 +50,15 @@ async def read_user(current_user: OwnedUser) -> User:
 
 @router.patch(
     "/{user_id}", response_model=UserRead,
-    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse},
+               404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
     summary="Update your account",
 )
 async def update_user(data: UserUpdate, current_user: OwnedUser, service: Service) -> User:
-    return await service.update(current_user.id, **data.model_dump(exclude_unset=True))
+    changes = data.model_dump(exclude_unset=True)
+    if data.password is not None:
+        changes["password"] = data.password.get_secret_value()
+    return await service.update(current_user.id, **changes)
 
 
 @router.patch(

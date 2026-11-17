@@ -9,6 +9,10 @@ class UserNotFoundError(Exception):
     """The requested user does not exist."""
 
 
+class PasswordUnchangedError(Exception):
+    """The new password matches the user's current password."""
+
+
 class AuthenticationError(Exception):
     """Credentials or the access token cannot authenticate an active user."""
 

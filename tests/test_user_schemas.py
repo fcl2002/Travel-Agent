@@ -2,14 +2,16 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.auth import LoginRequest
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 
 
-def test_registration_password_policy():
+@pytest.mark.parametrize("schema", [UserCreate, UserUpdate])
+def test_password_policy(schema):
     account = {"username": "traveler", "email": "traveler@example.com"}
     for password in ("Abcdef1!", "A1!" + "a" * 125, "  Abcdef1!  ", "Abcdef1_"):
-        user = UserCreate(**account, password=password)
+        user = schema(**account, password=password)
         assert user.password.get_secret_value() == password
+        assert password not in repr(user)
 
     for password in (
         "Abcde1!",                # Too short.
@@ -22,7 +24,16 @@ def test_registration_password_policy():
         "        ",
     ):
         with pytest.raises(ValidationError):
-            UserCreate(**account, password=password)
+            schema(**account, password=password)
 
+
+def test_login_accepts_legacy_passwords():
     # Existing accounts can still attempt login with their original passwords.
-    assert LoginRequest(email=account["email"], password="legacy-password")
+    assert LoginRequest(email="traveler@example.com", password="legacy-password")
+
+
+def test_password_update_is_optional_but_cannot_be_null():
+    assert UserUpdate(username="updated").password is None
+    assert UserUpdate(password="Abcdef1!").model_fields_set == {"password"}
+    with pytest.raises(ValidationError):
+        UserUpdate(password=None)
