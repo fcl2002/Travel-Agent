@@ -1,10 +1,20 @@
 services:
   api:
     build: .
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./app:/app/app:ro
     ports:
       - "127.0.0.1:8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-travel_agent}:${POSTGRES_PASSWORD:-travel_agent_dev}@db:5432/${POSTGRES_DB:-travel_agent}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env using the README instructions}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      JWT_ISSUER: ${JWT_ISSUER:-travel-agent}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-travel-agent-api}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      REFRESH_COOKIE_SECURE: ${REFRESH_COOKIE_SECURE:-true}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-}
     depends_on:
       db:
         condition: service_healthy

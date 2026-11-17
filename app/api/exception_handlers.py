@@ -4,10 +4,26 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.core.exceptions import UserAlreadyExistsError, UserNotFoundError
+from app.core.exceptions import (
+    AuthenticationError, AuthRateLimitError, UserAlreadyExistsError, UserNotFoundError,
+)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(AuthenticationError)
+    async def invalid_credentials(request: Request, exc: AuthenticationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=401, content={"detail": "Invalid credentials"},
+            headers={"WWW-Authenticate": "Bearer", "Cache-Control": "no-store"},
+        )
+
+    @app.exception_handler(AuthRateLimitError)
+    async def too_many_logins(request: Request, exc: AuthRateLimitError) -> JSONResponse:
+        return JSONResponse(
+            status_code=429, content={"detail": "Too many authentication attempts"},
+            headers={"Retry-After": str(exc.retry_after), "Cache-Control": "no-store"},
+        )
+
     @app.exception_handler(UserNotFoundError)
     async def user_not_found(request: Request, exc: UserNotFoundError) -> JSONResponse:
         return JSONResponse(status_code=404, content={"detail": "User not found"})

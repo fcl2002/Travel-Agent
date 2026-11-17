@@ -35,6 +35,10 @@ GROQ_API_KEY=your_api_key_here
 
 ## 4. Run the backend
 
+Set `JWT_SECRET_KEY` in `.env` to a cryptographically random key before starting
+the API; use the generation command in [README.md](../README.md). It preserves
+an existing key and does not print the generated secret.
+
 With Docker Desktop running and the virtual environment active:
 
 ```powershell

@@ -27,6 +27,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 cp -n .env.example .env
+# Generate a signing key only if .env does not already contain one.
+python -c "import secrets; from dotenv import dotenv_values, set_key; dotenv_values('.env').get('JWT_SECRET_KEY') or set_key('.env', 'JWT_SECRET_KEY', secrets.token_urlsafe(32))"
 docker compose up -d --wait db
 python -m alembic upgrade head
 python -m uvicorn app.main:app --reload
@@ -58,16 +60,23 @@ after configuring its API keys.
 
 ## User API
 
-User management is available without authentication in this implementation stage.
-The Swagger documentation at `/docs` contains the request and response schemas.
+Registration is public. Login returns a JWT access token; account routes require
+`Authorization: Bearer <access_token>` and allow access only to the caller's own
+account. The Swagger **Authorize** button accepts the token returned by login.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
 | POST | `/users` | Create a user; returns 201 and a Location header |
-| GET | `/users?limit=100&offset=0` | List users, including inactive users |
-| GET | `/users/{user_id}` | Get public user details |
-| PATCH | `/users/{user_id}` | Update username and/or email |
-| PATCH | `/users/{user_id}/deactivate` | Set the user inactive without deleting the record |
+| POST | `/auth/login` | Public login using email and password |
+| POST | `/auth/refresh` | Rotate the refresh cookie and get a new access token |
+| POST | `/auth/logout` | Revoke this login session and clear the cookie |
+| GET | `/users/me` | Get the authenticated account |
+| GET | `/users/{user_id}` | Get your own account; other IDs return 404 |
+| PATCH | `/users/{user_id}` | Update your own username and/or email |
+| PATCH | `/users/{user_id}/deactivate` | Deactivate your own account without deleting it |
+
+The global user-list endpoint is no longer exposed. There are no administrator
+roles in this version, so a bearer token does not grant access to other accounts.
 
 Example creation body:
 
@@ -75,7 +84,7 @@ Example creation body:
 {
   "username": "traveler",
   "email": "traveler@example.com",
-  "password": "A user supplied password!"
+  "password": "A user supplied password1!"
 }
 ```
 
@@ -85,7 +94,11 @@ Creation receives `password` and computes an Argon2id hash in the service with a
 random salt per hash. Hashing runs in a worker thread to avoid blocking the async
 API. The repository receives only the resulting hash; clients cannot submit
 `password_hash`. `app/core/security.py` provides `hash_password` and
-`verify_password`; authentication and login remain a later step.
+`verify_password`. Registration and login require passwords of 8–128 characters.
+Registration additionally requires at least one uppercase letter, one digit (0–9),
+and one ASCII punctuation character, such as `!`, `@`, `#`, `$`, or `%`.
+Whitespace is preserved and does not count as a special character. Login checks
+length only, so existing accounts can authenticate with their original passwords.
 Public responses contain `id`, `username`, `email`,
 `created_at`, `update_at`, and `is_active`, with no password or hash fields.
 Updates accept a nonempty subset of username/email; null values, unknown fields,
@@ -93,6 +106,55 @@ and client-supplied account metadata are rejected with 422. Missing users return
 404 and duplicate usernames/emails return 409. Errors roll back the request's
 transaction. Validation errors report field locations and messages without
 echoing submitted values.
+
+Login example:
+
+```json
+{"email": "traveler@example.com", "password": "A user supplied password1!"}
+```
+
+`POST /auth/login` returns `{"access_token": "...", "token_type": "bearer"}` and
+sets a refresh cookie (`HttpOnly`, `SameSite=Strict`, path `/auth`). The refresh
+token is never included in JSON or stored in `User`. A separate `auth_sessions`
+table stores its SHA-256 hash, owner, expiry, and revocation state. Each login
+creates an independent session.
+Logging in with valid credentials reactivates an inactive account, sets
+`is_active=true`, and updates `update_at`. Previous sessions are revoked so their
+access and refresh tokens remain invalid after reactivation. Reactivation and
+creation of the new session share one transaction; any failure rolls back both.
+`JWT_SECRET_KEY` must be a cryptographically random secret of at least 32 bytes;
+the API refuses to start without a valid key. The setup command above generates
+one without printing it or replacing an existing key. Keep it out of version control.
+Tokens use HS256 only, a UUID subject, issuer/audience validation, and expiration
+after 15 minutes by default (`ACCESS_TOKEN_EXPIRE_MINUTES`, 1–120). They contain
+no email, password, or hash. Wrong credentials and invalid tokens return a generic
+401 with `WWW-Authenticate: Bearer`. Inactive accounts cannot use protected routes
+or refresh sessions; they must log in again to reactivate. Each protected request
+checks that both the user and login session are active, so logout, session
+revocation, expiry, and user deactivation reject existing tokens.
+
+For page reloads, the frontend calls `POST /auth/refresh` with `credentials: "include"`
+and `X-Requested-With: XMLHttpRequest`, then keeps the new access token in memory.
+The browser sends the refresh cookie automatically. Refresh tokens rotate on each
+use and share an absolute seven-day session lifetime (`REFRESH_TOKEN_EXPIRE_DAYS`,
+1–30); reuse of a superseded signed token revokes that login session.
+Refresh/logout requests validate the Origin header when present and require the
+custom header to protect cookie-based operations against CSRF.
+
+`REFRESH_COOKIE_SECURE` defaults to true in application configuration. The local
+`.env.example` uses false for HTTP development only; production must use true and
+HTTPS. A separate same-site frontend may set `FRONTEND_ORIGIN` to its exact origin
+for credentialed CORS; wildcards are rejected. Use a consistent hostname instead
+of mixing `localhost` and `127.0.0.1`.
+See [authentication.md](docs/authentication.md) for frontend bootstrap and logout.
+
+Login and registration share a per-IP limit of 10 attempts per 60 seconds per
+process; excess attempts return 429 and `Retry-After`. This limiter is bounded and
+local to a worker. Production must use HTTPS and enforce a shared limit at the
+trusted gateway if running multiple workers or instances. Forwarded client IPs
+must only be trusted from your own proxy. Rotating the signing key invalidates
+all previously issued access and refresh tokens. Tokens from before the session
+implementation require a new login because they do not have a session ID.
 
 ## Docker and PostgreSQL
 
@@ -134,7 +196,7 @@ created. No secrets or local virtual environment are copied into the image.
 `DATABASE_URL` as the API. The initial migration creates `users` with UUID primary
 keys, unique username and email, a password hash, a timezone-aware creation date,
 and an active flag. The next migration adds `update_at`, the UTC timestamp of the
-most recent update or deactivation. It is `None` until the first update, including
+most recent update, deactivation, or reactivation. It is `None` until the first update, including
 for existing users. Apply migrations with `python -m alembic upgrade head`.
 Define future models using `Base` in `app/db/base.py`
 and import their modules in `alembic/env.py` before generating a migration.

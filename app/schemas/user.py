@@ -1,6 +1,7 @@
 """Request validation and public user responses."""
 
 from datetime import datetime
+from string import punctuation
 from typing import Annotated
 from uuid import UUID
 
@@ -19,15 +20,26 @@ class UserCreate(BaseModel):
     username: Username
     email: Email
     password: SecretStr = Field(
-        min_length=1, max_length=512,
-        description="Password to hash with Argon2id. Never returned in API responses.",
+        min_length=8, max_length=128,
+        description=(
+            "8–128 characters, including at least one uppercase letter, one digit "
+            "(0–9), and one ASCII punctuation character (e.g. !@#$%). "
+            "Hashed with Argon2id; never returned in API responses."
+        ),
     )
 
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: SecretStr) -> SecretStr:
-        if not value.get_secret_value().strip():
+        password = value.get_secret_value()
+        if not password.strip():
             raise ValueError("Password must not be empty")
+        if not any(character.isupper() for character in password):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(character in "0123456789" for character in password):
+            raise ValueError("Password must contain at least one digit (0-9)")
+        if not any(character in punctuation for character in password):
+            raise ValueError("Password must contain at least one special character (e.g. !@#$%)")
         return value
 
 

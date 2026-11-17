@@ -6,6 +6,7 @@ from alembic import context
 from app.core.config import get_settings
 from app.db.base import Base
 from app.db.tables.user import UserModel  # noqa: F401
+from app.db.tables.auth_session import AuthSessionModel  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

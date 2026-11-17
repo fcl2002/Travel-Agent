@@ -1,11 +1,10 @@
-"""Basic user management. Authentication will be added separately."""
+"""Public registration and authenticated access to the caller's own account."""
 
 from typing import Annotated
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Response, status
 
-from app.api.dependencies import get_user_service
+from app.api.dependencies import check_auth_rate_limit, get_current_user, get_owned_user, get_user_service
 from app.models.user import User
 from app.schemas.error import ErrorResponse
 from app.schemas.user import UserCreate, UserRead, UserUpdate
@@ -13,11 +12,14 @@ from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
 Service = Annotated[UserService, Depends(get_user_service)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
+OwnedUser = Annotated[User, Depends(get_owned_user)]
 
 
 @router.post(
     "", response_model=UserRead, status_code=status.HTTP_201_CREATED,
-    responses={409: {"model": ErrorResponse}}, summary="Create a user",
+    dependencies=[Depends(check_auth_rate_limit)],
+    responses={409: {"model": ErrorResponse}, 429: {"model": ErrorResponse}}, summary="Create a user",
 )
 async def create_user(data: UserCreate, service: Service, response: Response) -> User:
     user = await service.create(
@@ -25,39 +27,44 @@ async def create_user(data: UserCreate, service: Service, response: Response) ->
         password=data.password.get_secret_value(),
     )
     response.headers["Location"] = f"/users/{user.id}"
+    response.headers["Cache-Control"] = "no-store"
     return user
 
 
-@router.get("", response_model=list[UserRead], summary="List users")
-async def list_users(
-    service: Service,
-    limit: Annotated[int, Query(ge=1, le=100)] = 100,
-    offset: Annotated[int, Query(ge=0)] = 0,
-) -> list[User]:
-    return await service.list(limit=limit, offset=offset)
+@router.get(
+    "/me", response_model=UserRead, responses={401: {"model": ErrorResponse}},
+    summary="Get the authenticated account",
+)
+async def read_current_user(current_user: CurrentUser) -> User:
+    return current_user
 
 
 @router.get(
     "/{user_id}", response_model=UserRead,
-    responses={404: {"model": ErrorResponse}}, summary="Get a user by ID",
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Get your account by ID",
 )
-async def read_user(user_id: UUID, service: Service) -> User:
-    return await service.get(user_id)
+async def read_user(current_user: OwnedUser) -> User:
+    return current_user
 
 
 @router.patch(
     "/{user_id}", response_model=UserRead,
-    responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
-    summary="Update a user",
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    summary="Update your account",
 )
-async def update_user(user_id: UUID, data: UserUpdate, service: Service) -> User:
-    return await service.update(user_id, **data.model_dump(exclude_unset=True))
+async def update_user(data: UserUpdate, current_user: OwnedUser, service: Service) -> User:
+    return await service.update(current_user.id, **data.model_dump(exclude_unset=True))
 
 
 @router.patch(
     "/{user_id}/deactivate", response_model=UserRead,
-    responses={404: {"model": ErrorResponse}}, summary="Deactivate a user",
-    description="Mark the user as inactive while preserving the stored record.",
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Deactivate your account",
+    description=(
+        "Mark the user as inactive while preserving the stored record. "
+        "Logging in again with valid credentials reactivates the account."
+    ),
 )
-async def deactivate_user(user_id: UUID, service: Service) -> User:
-    return await service.deactivate(user_id)
+async def deactivate_user(current_user: OwnedUser, service: Service) -> User:
+    return await service.deactivate(current_user.id)
