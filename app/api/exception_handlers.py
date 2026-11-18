@@ -11,6 +11,13 @@ from app.core.exceptions import (
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(Exception)
+    async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(
+            status_code=500, content={"detail": "Internal server error"},
+            headers={"X-Request-ID": request.state.request_id, "Cache-Control": "no-store"},
+        )
+
     @app.exception_handler(PasswordUnchangedError)
     async def password_unchanged(request: Request, exc: PasswordUnchangedError) -> JSONResponse:
         return JSONResponse(

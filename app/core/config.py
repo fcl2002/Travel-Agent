@@ -1,6 +1,7 @@
 """Application configuration from environment variables or a local .env file."""
 
 from functools import lru_cache
+from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,6 +14,7 @@ class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://travel_agent:travel_agent_dev@localhost:5433/travel_agent"
     )
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     jwt_secret_key: SecretStr | None = Field(default=None, min_length=32)
     access_token_expire_minutes: int = Field(default=15, ge=1, le=120)
     refresh_token_expire_days: int = Field(default=7, ge=1, le=30)

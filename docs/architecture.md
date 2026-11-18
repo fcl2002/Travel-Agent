@@ -9,6 +9,7 @@ app/
   api/
     dependencies.py               # Wire concrete adapters to HTTP dependencies
     exception_handlers.py         # Authentication/domain errors and safe validation errors
+    middleware.py                 # HTTP request timing, status, and request ID logging
     endpoints/
       health.py                   # Existing /health and /health/db endpoints
       users.py                    # Registration and self-only account management
@@ -17,7 +18,7 @@ app/
   core/
     config.py                     # Environment and .env settings
     exceptions.py                 # Application errors without database dependencies
-    logging.py                    # Reserved; no logging implementation yet
+    logging.py                    # JSON logging and request context using standard logging
     security.py                   # Argon2id password hashing and verification
     tokens.py                     # JWT signing, claims, signature, and expiry validation
     rate_limit.py                 # Bounded per-process authentication throttling
@@ -124,7 +125,18 @@ user, returning 404 for another account without looking up its existence. Routes
 for account reads, updates, and deactivation require these dependencies. Registration
 is public; the global listing route is not exposed because there is no admin role.
 The internal repository/service listing methods remain available to trusted code.
-`core/logging.py` remains a placeholder.
+`core/logging.py` configures the `app` logger using Python's standard `logging`
+module. Application logs go to stdout as JSON, with their minimum severity set by
+`LOG_LEVEL` (default `INFO`). Uvicorn and third-party loggers keep their own
+configuration. `api/middleware.py` assigns a request ID in a `ContextVar`, adds
+`X-Request-ID` to responses, and logs the route template, method, HTTP status, and
+duration. It resets the context after each request. Unknown routes use
+`<unmatched>` so their raw paths do not enter application logs. Headers, cookies,
+query strings, bodies, and account data are not collected. Unexpected exceptions
+log their type and traceback locations, omitting exception messages and source
+lines that could contain credentials or SQL parameters. Their responses contain a
+generic 500 error and the request ID. Lifecycle and database health-check events
+are also logged. See [logging.md](logging.md) for usage and examples.
 
 `UserCreate` validates username, email, and `password`, represented by `SecretStr`.
 The service hashes the password through `core/security.py` before creating the entity;

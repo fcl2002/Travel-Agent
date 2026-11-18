@@ -224,6 +224,15 @@ To apply migrations already included in a rebuilt API image:
 docker compose exec api python -m alembic upgrade head
 ```
 
+## Logs
+
+Application logs use Python's built-in `logging` module and are emitted as JSON
+to stdout. Set `LOG_LEVEL=INFO` in `.env` (the default), or choose `DEBUG`,
+`WARNING`, `ERROR`, or `CRITICAL`. Request logs include the route template, method,
+status, duration, and an ID returned in the `X-Request-ID` response header.
+Lifecycle events, database health failures, and unexpected request errors are
+also recorded. See [logging.md](docs/logging.md) for details and usage.
+
 ## Tests
 
 With Docker Desktop running, start PostgreSQL and run the full suite:
