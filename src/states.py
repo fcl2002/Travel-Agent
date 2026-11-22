@@ -1,6 +1,6 @@
-from typing import TypeDict, List
+from typing import TypedDict, List
 
-class TravelState(TypeDict):
+class TravelState(TypedDict):
     origin: str
     destination: str
     budget: float

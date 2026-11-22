@@ -1,6 +1,6 @@
 .env
 .venv
-__pychace__/
+__pycache__/
 *.pyc
 
 models.py
