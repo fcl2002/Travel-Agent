@@ -1,5 +1,6 @@
 """Run migrations and writes in a temporary PostgreSQL schema, rolled back after each test."""
 
+import asyncio
 from pathlib import Path
 from uuid import uuid4
 
@@ -18,7 +19,7 @@ from app.repositories.sqlalchemy.user_repository import SQLAlchemyUserRepository
 
 @pytest.fixture
 def anyio_backend():
-    return "asyncio"
+    return "asyncio", {"loop_factory": asyncio.SelectorEventLoop}
 
 
 @pytest.fixture(scope="session")

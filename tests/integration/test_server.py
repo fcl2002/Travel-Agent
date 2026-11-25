@@ -18,7 +18,7 @@ def test_server_starts_and_connects_to_postgresql(database_url, tmp_path):
     with log_path.open("w") as log:
         process = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1",
-             "--port", "0", "--no-access-log"],
+             "--port", "0", "--no-access-log", "--loop", "asyncio:SelectorEventLoop"],
             cwd=Path(__file__).resolve().parents[2], env=environment,
             stdout=log, stderr=subprocess.STDOUT,
         )
