@@ -8,6 +8,9 @@ import jwt
 
 from app.core.exceptions import AuthenticationError
 
+MAX_ACCESS_TOKEN_MINUTES = 120
+MAX_TOKEN_LENGTH = 4096  # Reject oversized input before spending CPU on decoding.
+
 
 @dataclass(frozen=True)
 class TokenIdentity:
@@ -16,12 +19,15 @@ class TokenIdentity:
 
 
 class JWTTokenService:
-    def __init__(self, *, secret: str, expires_minutes: int = 120,
+    def __init__(self, *, secret: str, expires_minutes: int = 15,
                  issuer: str = "travel-agent", audience: str = "travel-agent-api"):
         if not secret.strip() or len(secret.encode()) < 32:
             raise ValueError("JWT signing key must contain at least 32 bytes")
-        if not 1 <= expires_minutes <= 120 or not issuer.strip() or not audience.strip():
-            raise ValueError("JWT requires a 1-120 minute lifetime and nonempty issuer and audience")
+        if (not 1 <= expires_minutes <= MAX_ACCESS_TOKEN_MINUTES
+                or not issuer.strip() or not audience.strip()):
+            raise ValueError(
+                f"JWT requires a 1-{MAX_ACCESS_TOKEN_MINUTES} minute lifetime and nonempty issuer and audience"
+            )
         self._secret = secret
         self.expires_minutes = expires_minutes
         self.issuer = issuer
@@ -43,7 +49,7 @@ class JWTTokenService:
         return self._encode(user_id, session_id, "refresh", expires_at)
 
     def _decode(self, token: str, token_use: str) -> TokenIdentity:
-        if len(token) > 4096:
+        if len(token) > MAX_TOKEN_LENGTH:
             raise AuthenticationError()
         try:
             claims = jwt.decode(

@@ -38,7 +38,7 @@ class Settings(BaseSettings):
                 or origin.username or origin.password or "*" in origin.netloc
                 or origin.path not in {"", "/"} or origin.query or origin.fragment):
             raise ValueError("FRONTEND_ORIGIN must be one exact HTTP(S) origin without a path or wildcard")
-        _ = origin.port  # Validate the optional port.
+        _ = origin.port  # .port raises ValueError on a non-numeric or out-of-range port.
         return f"{origin.scheme}://{origin.netloc.lower()}"
 
 

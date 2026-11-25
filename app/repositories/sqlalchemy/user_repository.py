@@ -12,6 +12,8 @@ from app.core.exceptions import UserAlreadyExistsError, UserNotFoundError
 from app.repositories.user_repository import UserRepository
 from app.db.tables.user import UserModel
 
+UNIQUE_VIOLATION = "23505"  # PostgreSQL SQLSTATE
+
 
 class SQLAlchemyUserRepository(UserRepository):
     def __init__(self, session: AsyncSession):
@@ -30,7 +32,7 @@ class SQLAlchemyUserRepository(UserRepository):
         try:
             await self.session.flush()
         except IntegrityError as exc:
-            if getattr(exc.orig, "sqlstate", None) == "23505":
+            if getattr(exc.orig, "sqlstate", None) == UNIQUE_VIOLATION:
                 raise UserAlreadyExistsError(
                     "A user with this id, username, or email already exists."
                 ) from None
