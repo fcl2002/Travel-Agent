@@ -55,12 +55,13 @@ alembic/
   versions/0001_create_users.py    # Users migration
   versions/0002_add_user_update_at.py  # Last-update timestamp
   versions/0003_create_auth_sessions.py  # Refresh-session storage
+  versions/0004_rename_users_updated_at.py  # Rename update_at to updated_at
 ```
 
 ## Responsibilities and database changes
 
 `models/user.py` contains the pure Python `User` entity, with UUID, username,
-email, a private password hash, creation time in UTC, the optional `update_at`
+email, a private password hash, creation time in UTC, the optional `updated_at`
 timestamp, and the active flag.
 `core/exceptions.py` defines database-independent errors. Neither module imports
 FastAPI or SQLAlchemy.
@@ -109,7 +110,7 @@ operation sequence.
 or SQLAlchemy dependencies. It verifies Argon2 credentials in a worker thread,
 uses a dummy hash for unknown emails, and returns the same authentication failure
 for wrong passwords or missing users. Valid credentials reactivate an inactive
-user through the existing user repository update, updating `update_at` and revoking
+user through the existing user repository update, updating `updated_at` and revoking
 all prior sessions through the session repository. Successful login persists
 an independent auth session and returns an access/refresh pair internally. The
 route returns only the access token in JSON and sets the refresh token in a cookie.
@@ -160,7 +161,7 @@ fields. Inactive users remain available in lookups and listings.
 The repository does not expose physical deletion. Updates preserve id and creation
 time. Missing lookups return `None`; updating or deactivating a missing user raises
 `UserNotFoundError`.
-`update_at` starts as `None`. Every repository update or deactivation assigns the
+`updated_at` starts as `None`. Every repository update or deactivation assigns the
 current time in UTC, ignoring an incoming update timestamp. This field records
 the most recent operation, not a history of all changes. Its changes participate
 in the same transaction and are reverted on rollback.
@@ -274,6 +275,8 @@ async migration tests call Alembic through `AsyncConnection.run_sync`. No schema
 migration is required for the switch to async sessions.
 The `0002_add_user_update_at` migration adds the nullable timestamp column;
 existing users retain `None` until their next update, preserving their data.
+`0004_rename_users_updated_at` renames that column from `update_at` to `updated_at`
+in place, so existing values are kept.
 
 The default suite checks PostgreSQL and starts a real temporary Uvicorn server.
 Repository tests use AnyIO with the asyncio backend and real async PostgreSQL

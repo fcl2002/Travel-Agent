@@ -26,7 +26,7 @@ If they match, the request returns 400 and no account fields are changed.
 1. `POST /auth/login` with JSON email/password and `credentials: "include"`.
    The response contains the access token and sets the refresh cookie.
    If the account is inactive, valid credentials reactivate it and update
-   `update_at`. Previous sessions are revoked, keeping their access and refresh
+   `updated_at`. Previous sessions are revoked, keeping their access and refresh
    tokens invalid. Reactivation and creation of the new session are atomic.
 2. Keep the access token in memory and send it as `Authorization: Bearer ...`.
 3. On page startup or access-token expiration, call `POST /auth/refresh` with

@@ -101,7 +101,7 @@ one uppercase letter, one digit (0–9), and one ASCII punctuation character, su
 Whitespace is preserved and does not count as a special character. Login checks
 length only, so existing accounts can authenticate with their original passwords.
 Public responses contain `id`, `username`, `email`,
-`created_at`, `update_at`, and `is_active`, with no password or hash fields.
+`created_at`, `updated_at`, and `is_active`, with no password or hash fields.
 Updates accept a nonempty subset of username/email/password; null values, unknown
 fields, and client-supplied account metadata are rejected with 422. Missing users return
 404 and duplicate usernames/emails return 409. Errors roll back the request's
@@ -128,7 +128,7 @@ token is never included in JSON or stored in `User`. A separate `auth_sessions`
 table stores its SHA-256 hash, owner, expiry, and revocation state. Each login
 creates an independent session.
 Logging in with valid credentials reactivates an inactive account, sets
-`is_active=true`, and updates `update_at`. Previous sessions are revoked so their
+`is_active=true`, and updates `updated_at`. Previous sessions are revoked so their
 access and refresh tokens remain invalid after reactivation. Reactivation and
 creation of the new session share one transaction; any failure rolls back both.
 `JWT_SECRET_KEY` must be a cryptographically random secret of at least 32 bytes;
@@ -204,7 +204,7 @@ created. No secrets or local virtual environment are copied into the image.
 [Alembic](https://alembic.sqlalchemy.org/en/latest/tutorial.html) uses the same
 `DATABASE_URL` as the API. The initial migration creates `users` with UUID primary
 keys, unique username and email, a password hash, a timezone-aware creation date,
-and an active flag. The next migration adds `update_at`, the UTC timestamp of the
+and an active flag. The next migration adds `updated_at`, the UTC timestamp of the
 most recent update, deactivation, or reactivation. It is `None` until the first update, including
 for existing users. Apply migrations with `python -m alembic upgrade head`.
 Define future models using `Base` in `app/db/base.py`
