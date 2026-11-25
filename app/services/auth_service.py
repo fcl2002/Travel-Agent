@@ -25,20 +25,20 @@ def token_hash(token: str) -> str:
 
 
 class AuthService:
-    def __init__(self, repository: UserRepository, sessions: AuthSessionRepository,
-                 tokens: JWTTokenService, refresh_days: int = 7):
-        self.repository, self.sessions, self.tokens = repository, sessions, tokens
+    def __init__(self, users: UserRepository, sessions: AuthSessionRepository,
+                 token_service: JWTTokenService, refresh_days: int = 7):
+        self.users, self.sessions, self.token_service = users, sessions, token_service
         self.refresh_days = refresh_days
 
     def _issue_tokens(self, session: AuthSession) -> AuthTokens:
         return AuthTokens(
-            access_token=self.tokens.create_access_token(session.user_id, session.id),
-            refresh_token=self.tokens.create_refresh_token(session.user_id, session.id, session.expires_at),
+            access_token=self.token_service.create_access_token(session.user_id, session.id),
+            refresh_token=self.token_service.create_refresh_token(session.user_id, session.id, session.expires_at),
             refresh_expires_at=session.expires_at,
         )
 
     async def login(self, *, email: str, password: str) -> AuthTokens:
-        user = await self.repository.get_by_email(email)
+        user = await self.users.get_by_email(email)
         valid = await asyncio.to_thread(
             verify_password, password, user.password_hash if user else _DUMMY_HASH,
         )
@@ -47,7 +47,7 @@ class AuthService:
         if not user.is_active:
             # Reactivation must not restore access through pre-deactivation tokens.
             await self.sessions.revoke_for_user(user.id)
-            user = await self.repository.update(replace(user, is_active=True))
+            user = await self.users.update(replace(user, is_active=True))
         now = datetime.now(UTC)
         session = AuthSession(id=uuid4(), user_id=user.id, refresh_token_hash="",
                               created_at=now, expires_at=now + timedelta(days=self.refresh_days))
@@ -60,7 +60,7 @@ class AuthService:
 
         Do not raise in that case: an exception rolls back the transaction and undoes the revocation.
         """
-        identity = self.tokens.decode_refresh_token(token)
+        identity = self.token_service.decode_refresh_token(token)
         session = await self.sessions.get_by_id(identity.session_id, for_update=True)
         now = datetime.now(UTC)
         if session is None or session.user_id != identity.user_id or not session.is_valid_at(now):
@@ -70,7 +70,7 @@ class AuthService:
             # Return normally so the outer transaction commits this revocation.
             await self.sessions.save(replace(session, revoked_at=now))
             return None
-        user = await self.repository.get_by_id(identity.user_id)
+        user = await self.users.get_by_id(identity.user_id)
         if user is None or not user.is_active:
             await self.sessions.save(replace(session, revoked_at=now))
             return None
@@ -82,7 +82,7 @@ class AuthService:
         if not token:
             return
         try:
-            identity = self.tokens.decode_refresh_token(token)
+            identity = self.token_service.decode_refresh_token(token)
         except AuthenticationError:
             return
         session = await self.sessions.get_by_id(identity.session_id, for_update=True)
@@ -90,11 +90,11 @@ class AuthService:
             await self.sessions.save(replace(session, revoked_at=datetime.now(UTC)))
 
     async def get_current_user(self, token: str) -> User:
-        identity = self.tokens.decode_access_token(token)
+        identity = self.token_service.decode_access_token(token)
         session = await self.sessions.get_by_id(identity.session_id)
         if session is None or session.user_id != identity.user_id or not session.is_valid_at(datetime.now(UTC)):
             raise AuthenticationError()
-        user = await self.repository.get_by_id(identity.user_id)
+        user = await self.users.get_by_id(identity.user_id)
         if user is None or not user.is_active:
             raise AuthenticationError()
         return user

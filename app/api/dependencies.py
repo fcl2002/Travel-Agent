@@ -74,11 +74,11 @@ async def get_auth_session_repository(
 
 
 async def get_auth_service(
-    repository: Annotated[UserRepository, Depends(get_user_repository)],
+    users: Annotated[UserRepository, Depends(get_user_repository)],
     sessions: Annotated[AuthSessionRepository, Depends(get_auth_session_repository)],
-    tokens: Annotated[JWTTokenService, Depends(get_token_service)],
+    token_service: Annotated[JWTTokenService, Depends(get_token_service)],
 ) -> AuthService:
-    return AuthService(repository, sessions, tokens, refresh_days=get_settings().refresh_token_expire_days)
+    return AuthService(users, sessions, token_service, refresh_days=get_settings().refresh_token_expire_days)
 
 
 async def check_cookie_request(
