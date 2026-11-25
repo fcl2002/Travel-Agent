@@ -56,8 +56,8 @@ async def test_user_routes_lifecycle(client, repository_session):
         stored = await SQLAlchemyUserRepository(session).get_by_id(UUID(user["id"]))
     assert stored.password_hash.startswith("$argon2id$")
     assert verify_password(PAYLOAD["password"], stored.password_hash) is True
-    location = response.headers["Location"]
-    assert location == f"/users/{user['id']}"
+    assert "Location" not in response.headers
+    location = "/users/me"
     assert (await client.get(location)).status_code == 401
     login = await client.post("/auth/login", json={"email": PAYLOAD["email"], "password": PAYLOAD["password"]})
     assert login.status_code == 200 and login.headers["Cache-Control"] == "no-store"
@@ -109,16 +109,16 @@ async def test_user_routes_errors_and_validation(client):
     assert response.json() == {"detail": "Username or email already exists"}
     login = await client.post("/auth/login", json={"email": PAYLOAD["email"], "password": PAYLOAD["password"]})
     client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
-    location = f"/users/{original['id']}"
+    location = "/users/me"
     response = await client.patch(location, json={"username": "another", "email": "changed@example.com"})
     assert response.status_code == 409
     assert (await client.get(location)).json() == original
 
-    missing = f"/users/{uuid4()}"
-    for method, path, body in (("GET", missing, None), ("PATCH", missing, {"username": "missing"}),
-                               ("PATCH", f"{missing}/deactivate", None)):
-        response = await client.request(method, path, json=body)
-        assert response.status_code == 404 and response.json() == {"detail": "User not found"}
+    # Routes addressed by user ID no longer exist; any ID, even your own, is unrouted.
+    for path in (f"/users/{uuid4()}", f"/users/{original['id']}", "/users/not-a-uuid"):
+        for method, suffix, body in (("GET", "", None), ("PATCH", "", {"username": "x"}),
+                                     ("PATCH", "/deactivate", None)):
+            assert (await client.request(method, path + suffix, json=body)).status_code == 404
     for body in ({**PAYLOAD, "email": "invalid"}, {**PAYLOAD, "password": "short"},
                  {**PAYLOAD, "password": " "},
                  {**PAYLOAD, "username": " "}, {**PAYLOAD, "is_active": False},
@@ -129,7 +129,6 @@ async def test_user_routes_errors_and_validation(client):
     for body in ({}, {"email": None}, {"password_hash": "private-hash"}):
         response = await client.patch(location, json=body)
         assert response.status_code == 422 and "private-hash" not in response.text
-    assert (await client.get("/users/not-a-uuid")).status_code == 422
 
 
 async def test_auth_rejects_bad_credentials_tokens_and_foreign_accounts(client):
@@ -181,7 +180,7 @@ async def test_password_update_requires_authentication_and_hashes_password(clien
     login = await register_and_login(client)
     authorization = {"Authorization": f"Bearer {login.json()['access_token']}"}
     user = (await client.get("/users/me", headers=authorization)).json()
-    location = f"/users/{user['id']}"
+    location = "/users/me"
     password = "  New password123!  "
 
     for headers in ({}, {"Authorization": "Bearer invalid-token"}):
@@ -222,7 +221,7 @@ async def test_password_update_rejects_current_password(client, repository_sessi
     login = await register_and_login(client)
     client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
     user = (await client.get("/users/me")).json()
-    location = f"/users/{user['id']}"
+    location = "/users/me"
     password = PAYLOAD["password"]
     if change_password_first:
         password = "New password123!"
@@ -248,7 +247,7 @@ async def test_invalid_password_updates_leave_account_unchanged(client, reposito
     user = (await client.get("/users/me")).json()
     for password in (None, "", "Abcde1!", "A1!" + "a" * 126, "abcdef1!", "Abcdefg!",
                      "Abcdef12", "Abcdef1 ", "Abcdef1\n", "        "):
-        response = await client.patch(f"/users/{user['id']}", json={"username": "changed", "password": password})
+        response = await client.patch("/users/me", json={"username": "changed", "password": password})
         assert response.status_code == 422
         assert all("input" not in error for error in response.json()["detail"])
         if password and password.strip():
@@ -263,7 +262,7 @@ async def test_failed_reactivation_rolls_back_user_and_sessions(client, reposito
     login = await register_and_login(client)
     identity = get_token_service().decode_refresh_token(client.cookies.get(COOKIE_NAME))
     client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
-    inactive = (await client.patch(f"/users/{identity.user_id}/deactivate")).json()
+    inactive = (await client.patch("/users/me/deactivate")).json()
     original_add = SQLAlchemyAuthSessionRepository.add
     failed_sessions = []
 

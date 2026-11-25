@@ -13,11 +13,11 @@ Login validates length only, allowing existing accounts to authenticate with the
 original passwords. Invalid registration passwords and password lengths outside
 these bounds return 422.
 
-Authenticated users can change their own password with `PATCH /users/{user_id}`
+Authenticated users can change their own password with `PATCH /users/me`
 and a JSON body containing `password`. This field shares the registration schema's
 length and complexity checks. The service hashes it with Argon2id before saving;
 responses never include the password or its hash. Missing or invalid bearer tokens
-return 401, and attempts to update another account return 404.
+return 401. No route accepts a user ID, so another account cannot be addressed.
 The service verifies the new password against the current hash before hashing it.
 If they match, the request returns 400 and no account fields are changed.
 

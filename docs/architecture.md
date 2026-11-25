@@ -121,9 +121,9 @@ accounts cannot access protected routes or refresh sessions; only a login with
 valid credentials reactivates the account. Prior tokens remain invalid afterward.
 
 `get_current_user` extracts a bearer token and calls the auth service.
-`get_owned_user` additionally compares the requested UUID with the authenticated
-user, returning 404 for another account without looking up its existence. Routes
-for account reads, updates, and deactivation require these dependencies. Registration
+Account reads, updates, and deactivation live under `/users/me` and use only
+`get_current_user`: no route takes a user ID, so there is no ID to guess and no
+ownership check to forget. Registration
 is public; the global listing route is not exposed because there is no admin role.
 The internal repository/service listing methods remain available to trusted code.
 `core/logging.py` configures the `app` logger using Python's standard `logging`

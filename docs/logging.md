@@ -12,12 +12,12 @@ the API container. View container logs with `docker compose logs -f api`.
 
 Every HTTP request receives a generated `X-Request-ID` response header. The same
 ID appears in logs emitted during that request. HTTP logs include a route
-template, such as `/users/{user_id}`, the method, status code, and duration in
+template, such as `/users/me`, the method, status code, and duration in
 milliseconds. Responses with 4xx statuses use `WARNING`, 5xx statuses use `ERROR`,
 and other responses use `INFO`. Unmatched routes are recorded as `<unmatched>`.
 
 ```json
-{"timestamp":"2026-11-18T10:00:00+00:00","level":"INFO","logger":"app.api.middleware","event":"request_completed","request_id":"1f80c1c32e4e4b4a89109f09c43e88d3","method":"PATCH","route":"/users/{user_id}","status_code":200,"duration_ms":182.5}
+{"timestamp":"2026-11-18T10:00:00+00:00","level":"INFO","logger":"app.api.middleware","event":"request_completed","request_id":"1f80c1c32e4e4b4a89109f09c43e88d3","method":"PATCH","route":"/users/me","status_code":200,"duration_ms":182.5}
 ```
 
 The API also records `application_started`, `application_stopped`, and

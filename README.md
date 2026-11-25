@@ -66,14 +66,13 @@ account. The Swagger **Authorize** button accepts the token returned by login.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| POST | `/users` | Create a user; returns 201 and a Location header |
+| POST | `/users` | Create a user; returns 201 with the new account |
 | POST | `/auth/login` | Public login using email and password |
 | POST | `/auth/refresh` | Rotate the refresh cookie and get a new access token |
 | POST | `/auth/logout` | Revoke this login session and clear the cookie |
 | GET | `/users/me` | Get the authenticated account |
-| GET | `/users/{user_id}` | Get your own account; other IDs return 404 |
-| PATCH | `/users/{user_id}` | Update your own username, email, and/or password |
-| PATCH | `/users/{user_id}/deactivate` | Deactivate your own account without deleting it |
+| PATCH | `/users/me` | Update your own username, email, and/or password |
+| PATCH | `/users/me/deactivate` | Deactivate your own account without deleting it |
 
 The global user-list endpoint is no longer exposed. There are no administrator
 roles in this version, so a bearer token does not grant access to other accounts.
@@ -108,7 +107,7 @@ fields, and client-supplied account metadata are rejected with 422. Missing user
 transaction. Validation errors report field locations and messages without
 echoing submitted values.
 
-To change the authenticated user's password, send `PATCH /users/{user_id}` with
+To change the authenticated user's password, send `PATCH /users/me` with
 `Authorization: Bearer <access_token>` and a body such as
 `{"password": "New password123!"}`. Only the account owner may update it.
 The new password follows the same schema validation as registration and replaces

@@ -2,7 +2,6 @@
 
 from functools import lru_cache
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, Request, Response, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -11,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.probe import SQLAlchemyDatabaseProbe
 from app.db.session import get_session
 from app.core.config import get_settings
-from app.core.exceptions import AuthenticationError, UserNotFoundError
+from app.core.exceptions import AuthenticationError
 from app.core.rate_limit import AuthRateLimiter
 from app.core.tokens import JWTTokenService
 from app.models.user import User
@@ -109,11 +108,3 @@ async def get_current_user(
     user = await service.get_current_user(credentials.credentials)
     response.headers["Cache-Control"] = "no-store"
     return user
-
-
-async def get_owned_user(
-    user_id: UUID, current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
-    if current_user.id != user_id:
-        raise UserNotFoundError("User not found")
-    return current_user
