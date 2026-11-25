@@ -14,10 +14,11 @@ class SQLAlchemyAuthSessionRepository(AuthSessionRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def add(self, session: AuthSession) -> None:
+    async def add(self, auth_session: AuthSession) -> None:
         self.session.add(AuthSessionModel(
-            id=session.id, user_id=session.user_id, refresh_token_hash=session.refresh_token_hash,
-            created_at=session.created_at, expires_at=session.expires_at, revoked_at=session.revoked_at,
+            id=auth_session.id, user_id=auth_session.user_id,
+            refresh_token_hash=auth_session.refresh_token_hash, created_at=auth_session.created_at,
+            expires_at=auth_session.expires_at, revoked_at=auth_session.revoked_at,
         ))
         await self.session.flush()
 
@@ -34,12 +35,12 @@ class SQLAlchemyAuthSessionRepository(AuthSessionRepository):
             revoked_at=model.revoked_at.astimezone(UTC) if model.revoked_at else None,
         )
 
-    async def save(self, session: AuthSession) -> None:
-        model = await self.session.get(AuthSessionModel, session.id)
+    async def save(self, auth_session: AuthSession) -> None:
+        model = await self.session.get(AuthSessionModel, auth_session.id)
         if model is None:
             raise AuthenticationError()
-        model.refresh_token_hash = session.refresh_token_hash
-        model.revoked_at = session.revoked_at
+        model.refresh_token_hash = auth_session.refresh_token_hash
+        model.revoked_at = auth_session.revoked_at
         await self.session.flush()
 
     async def revoke_for_user(self, user_id: UUID) -> None:
