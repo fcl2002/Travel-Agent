@@ -34,11 +34,9 @@ async def login(
     summary="Rotate the refresh cookie and issue a new access token",
 )
 async def refresh(request: Request, response: Response, service: Service) -> TokenResponse | JSONResponse:
+    token = request.cookies.get(COOKIE_NAME)
     try:
-        token = request.cookies.get(COOKIE_NAME)
-        if not token:
-            raise AuthenticationError()
-        tokens = await service.refresh(token)
+        tokens = await service.refresh(token) if token else None
     except AuthenticationError:
         tokens = None
     if tokens is None:

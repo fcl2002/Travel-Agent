@@ -12,7 +12,7 @@ class AuthSession:
     expires_at: datetime
     revoked_at: datetime | None = None
 
-    def is_active(self, now: datetime) -> bool:
+    def is_valid_at(self, now: datetime) -> bool:
         return self.revoked_at is None and self.expires_at > now
 
 

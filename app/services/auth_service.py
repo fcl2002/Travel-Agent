@@ -56,10 +56,14 @@ class AuthService:
         return tokens
 
     async def refresh(self, token: str) -> AuthTokens | None:
+        """Return None when this call revoked the session.
+
+        Do not raise in that case: an exception rolls back the transaction and undoes the revocation.
+        """
         identity = self.tokens.decode_refresh_token(token)
         session = await self.sessions.get_by_id(identity.session_id, for_update=True)
         now = datetime.now(UTC)
-        if session is None or session.user_id != identity.user_id or not session.is_active(now):
+        if session is None or session.user_id != identity.user_id or not session.is_valid_at(now):
             raise AuthenticationError()
         if not hmac.compare_digest(session.refresh_token_hash, token_hash(token)):
             # A signed, superseded refresh token proves reuse of this session.
@@ -88,7 +92,7 @@ class AuthService:
     async def get_current_user(self, token: str) -> User:
         identity = self.tokens.decode_access_token(token)
         session = await self.sessions.get_by_id(identity.session_id)
-        if session is None or session.user_id != identity.user_id or not session.is_active(datetime.now(UTC)):
+        if session is None or session.user_id != identity.user_id or not session.is_valid_at(datetime.now(UTC)):
             raise AuthenticationError()
         user = await self.repository.get_by_id(identity.user_id)
         if user is None or not user.is_active:
