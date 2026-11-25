@@ -23,7 +23,7 @@ class SQLAlchemyUserRepository(UserRepository):
     def _to_entity(model: UserModel) -> User:
         return User(
             id=model.id, username=model.username, email=model.email,
-            _password_hash=model.password_hash, created_at=model.created_at.astimezone(UTC),
+            password_hash=model.password_hash, created_at=model.created_at.astimezone(UTC),
             update_at=model.update_at.astimezone(UTC) if model.update_at is not None else None,
             is_active=model.is_active,
         )

@@ -41,7 +41,7 @@ class UserService:
         if password is not None:
             if await asyncio.to_thread(verify_password, password, user.password_hash):
                 raise PasswordUnchangedError()
-            changes["_password_hash"] = await asyncio.to_thread(hash_password, password)
+            changes["password_hash"] = await asyncio.to_thread(hash_password, password)
         return await self.repository.update(replace(user, **changes))
 
     async def deactivate(self, user_id: UUID) -> User:

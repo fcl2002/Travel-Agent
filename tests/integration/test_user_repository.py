@@ -32,13 +32,13 @@ async def test_user_lifecycle(repository_session):
 
         before_update = datetime.now(UTC)
         updated = await user_repository.update(replace(
-            user, username="updated", email="updated@example.com", _password_hash="new-hash",
+            user, username="updated", email="updated@example.com", password_hash="new-hash",
             created_at=datetime(2000, 1, 1, tzinfo=UTC), update_at=datetime(2000, 1, 1, tzinfo=UTC),
         ))
         assert before_update <= updated.update_at <= datetime.now(UTC)
         assert updated.update_at.utcoffset().total_seconds() == 0
         assert updated == replace(user, username="updated", email="updated@example.com",
-                                  _password_hash="new-hash", update_at=updated.update_at)
+                                  password_hash="new-hash", update_at=updated.update_at)
         assert await user_repository.get_by_id(user.id) == updated
         another = await user_repository.add(new_user("another", "another@example.com"))
         assert await user_repository.list(limit=1, offset=1) == [another]
