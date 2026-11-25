@@ -55,13 +55,17 @@ class UserUpdate(BaseModel):
     username: Username | None = None
     email: Email | None = None
     password: Password | None = None
+    current_password: SecretStr | None = Field(default=None, min_length=8, max_length=128)
 
     @model_validator(mode="after")
     def validate_changes(self) -> "UserUpdate":
-        if not self.model_fields_set:
+        changes = self.model_fields_set - {"current_password"}
+        if not changes:
             raise ValueError("Provide at least one field to update")
         if any(getattr(self, name) is None for name in self.model_fields_set):
             raise ValueError("Updated fields must not be null")
+        if changes & {"email", "password"} and self.current_password is None:
+            raise ValueError("Provide current_password to change email or password")
         return self
 
 

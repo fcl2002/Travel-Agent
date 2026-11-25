@@ -13,6 +13,10 @@ class PasswordUnchangedError(Exception):
     """The new password matches the user's current password."""
 
 
+class InvalidCurrentPasswordError(Exception):
+    """The current password given to confirm a sensitive account change is wrong."""
+
+
 class AuthenticationError(Exception):
     """Credentials or the access token cannot authenticate an active user."""
 

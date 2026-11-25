@@ -18,8 +18,13 @@ and a JSON body containing `password`. This field shares the registration schema
 length and complexity checks. The service hashes it with Argon2id before saving;
 responses never include the password or its hash. Missing or invalid bearer tokens
 return 401. No route accepts a user ID, so another account cannot be addressed.
-The service verifies the new password against the current hash before hashing it.
-If they match, the request returns 400 and no account fields are changed.
+
+Changing `email` or `password` also requires `current_password`, so a stolen access
+token alone cannot take over the account. A wrong value returns 403 (not 401: the
+token is still valid) and changes nothing. If the new password equals the current
+one, the request returns 400 and no account fields are changed. A successful
+password change revokes every login session of the user, including the current
+one: old access tokens and refresh cookies stop working and the client logs in again.
 
 ## API flow
 

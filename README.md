@@ -109,7 +109,10 @@ echoing submitted values.
 
 To change the authenticated user's password, send `PATCH /users/me` with
 `Authorization: Bearer <access_token>` and a body such as
-`{"password": "New password123!"}`. Only the account owner may update it.
+`{"password": "New password123!", "current_password": "<current password>"}`.
+Changing `email` or `password` requires `current_password`; a wrong value returns 403.
+A password change revokes every login session, including the current one, so the
+client must log in again.
 The new password follows the same schema validation as registration and replaces
 the stored hash; subsequent logins must use the new password.
 The new password must differ from the current password. Reusing the current

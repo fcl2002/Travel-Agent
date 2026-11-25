@@ -10,8 +10,6 @@ from app.schemas.error import ErrorResponse
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.user_service import UserService
 
-# Account routes use /me, never a user ID: there is no ID to guess and no ownership check to forget.
-# A future admin /{user_id} route must be declared after /me, or "me" is parsed as a UUID.
 router = APIRouter(prefix="/users", tags=["users"])
 Service = Annotated[UserService, Depends(get_user_service)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
@@ -41,13 +39,20 @@ async def read_current_user(current_user: CurrentUser) -> User:
 
 @router.patch(
     "/me", response_model=UserRead,
-    responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse},
+               403: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
     summary="Update the authenticated account",
+    description=(
+        "Changing email or password requires current_password. "
+        "A password change revokes every login session, including this one."
+    ),
 )
 async def update_current_user(data: UserUpdate, current_user: CurrentUser, service: Service) -> User:
-    changes = data.model_dump(exclude_unset=True)
+    changes = data.model_dump(exclude_unset=True, exclude={"password", "current_password"})
     if data.password is not None:
         changes["password"] = data.password.get_secret_value()
+    if data.current_password is not None:
+        changes["current_password"] = data.current_password.get_secret_value()
     return await service.update(current_user.id, **changes)
 
 

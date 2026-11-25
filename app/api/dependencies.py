@@ -60,16 +60,17 @@ async def get_user_repository(
     return SQLAlchemyUserRepository(session)
 
 
-async def get_user_service(
-    repository: Annotated[UserRepository, Depends(get_user_repository)],
-) -> UserService:
-    return UserService(repository)
-
-
 async def get_auth_session_repository(
     session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> AuthSessionRepository:
     return SQLAlchemyAuthSessionRepository(session)
+
+
+async def get_user_service(
+    repository: Annotated[UserRepository, Depends(get_user_repository)],
+    sessions: Annotated[AuthSessionRepository, Depends(get_auth_session_repository)],
+) -> UserService:
+    return UserService(repository, sessions)
 
 
 async def get_auth_service(

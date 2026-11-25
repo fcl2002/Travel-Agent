@@ -110,7 +110,8 @@ async def test_user_routes_errors_and_validation(client):
     login = await client.post("/auth/login", json={"email": PAYLOAD["email"], "password": PAYLOAD["password"]})
     client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
     location = "/users/me"
-    response = await client.patch(location, json={"username": "another", "email": "changed@example.com"})
+    response = await client.patch(location, json={"username": "another", "email": "changed@example.com",
+                                                  "current_password": PAYLOAD["password"]})
     assert response.status_code == 409
     assert (await client.get(location)).json() == original
 
@@ -182,16 +183,18 @@ async def test_password_update_requires_authentication_and_hashes_password(clien
     user = (await client.get("/users/me", headers=authorization)).json()
     location = "/users/me"
     password = "  New password123!  "
+    change = {"password": password, "current_password": PAYLOAD["password"]}
+    old_cookie = client.cookies.get(COOKIE_NAME)
 
     for headers in ({}, {"Authorization": "Bearer invalid-token"}):
-        response = await client.patch(location, json={"password": password}, headers=headers)
+        response = await client.patch(location, json=change, headers=headers)
         assert response.status_code == 401
 
     async with transaction(repository_session):
         original = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
         assert verify_password(PAYLOAD["password"], original.password_hash)
 
-    response = await client.patch(location, json={"password": password}, headers=authorization)
+    response = await client.patch(location, json=change, headers=authorization)
     assert response.status_code == 200
     updated = response.json()
     assert updated == {**user, "updated_at": updated["updated_at"]}
@@ -206,9 +209,16 @@ async def test_password_update_requires_authentication_and_hashes_password(clien
         assert verify_password(password, stored.password_hash)
         assert not verify_password(PAYLOAD["password"], stored.password_hash)
 
+    # A password change revokes every session: the old access token and refresh cookie stop working.
+    assert (await client.get(location, headers=authorization)).status_code == 401
+    response = await client.post("/auth/refresh", headers={**COOKIE_HEADERS, "Cookie": f"{COOKIE_NAME}={old_cookie}"})
+    assert response.status_code == 401
+
     credentials = {"email": PAYLOAD["email"], "password": PAYLOAD["password"]}
     assert (await client.post("/auth/login", json=credentials)).status_code == 401
-    assert (await client.post("/auth/login", json={**credentials, "password": password})).status_code == 200
+    login = await client.post("/auth/login", json={**credentials, "password": password})
+    assert login.status_code == 200
+    authorization = {"Authorization": f"Bearer {login.json()['access_token']}"}
     # Updating profile data must preserve the new password hash.
     assert (await client.patch(location, json={"username": "updated"}, headers=authorization)).status_code == 200
     async with transaction(repository_session):
@@ -225,12 +235,16 @@ async def test_password_update_rejects_current_password(client, repository_sessi
     password = PAYLOAD["password"]
     if change_password_first:
         password = "New password123!"
-        assert (await client.patch(location, json={"password": password})).status_code == 200
+        change = {"password": password, "current_password": PAYLOAD["password"]}
+        assert (await client.patch(location, json=change)).status_code == 200
+        login = await client.post("/auth/login", json={"email": PAYLOAD["email"], "password": password})
+        client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
 
     async with transaction(repository_session):
         before = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
 
-    response = await client.patch(location, json={"username": "changed", "password": password})
+    response = await client.patch(location, json={"username": "changed", "password": password,
+                                                  "current_password": password})
     assert response.status_code == 400
     assert response.json() == {"detail": "New password must be different from the current password"}
     assert response.headers["Cache-Control"] == "no-store"
@@ -241,13 +255,38 @@ async def test_password_update_rejects_current_password(client, repository_sessi
         assert verify_password(password, after.password_hash)
 
 
+async def test_email_and_password_changes_require_the_current_password(client, repository_session):
+    login = await register_and_login(client)
+    client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
+    user = (await client.get("/users/me")).json()
+    async with transaction(repository_session):
+        before = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+
+    # A stolen access token alone cannot change the login email or the password.
+    for change in ({"email": "attacker@example.com"}, {"password": "Attacker123!"}):
+        assert (await client.patch("/users/me", json=change)).status_code == 422
+        response = await client.patch("/users/me", json={**change, "current_password": "Wrong password1!"})
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Current password is incorrect"}
+        assert "Wrong password1!" not in response.text
+    async with transaction(repository_session):
+        assert await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"])) == before
+    # A wrong current password is not a session failure: the token keeps working.
+    assert (await client.get("/users/me")).status_code == 200
+
+    response = await client.patch("/users/me", json={"email": "new@example.com",
+                                                     "current_password": PAYLOAD["password"]})
+    assert response.status_code == 200 and response.json()["email"] == "new@example.com"
+
+
 async def test_invalid_password_updates_leave_account_unchanged(client, repository_session):
     login = await register_and_login(client)
     client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
     user = (await client.get("/users/me")).json()
     for password in (None, "", "Abcde1!", "A1!" + "a" * 126, "abcdef1!", "Abcdefg!",
                      "Abcdef12", "Abcdef1 ", "Abcdef1\n", "        "):
-        response = await client.patch("/users/me", json={"username": "changed", "password": password})
+        response = await client.patch("/users/me", json={"username": "changed", "password": password,
+                                                         "current_password": PAYLOAD["password"]})
         assert response.status_code == 422
         assert all("input" not in error for error in response.json()["detail"])
         if password and password.strip():
