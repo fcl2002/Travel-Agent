@@ -12,7 +12,7 @@ class User:
     email: str
     password_hash: str = field(repr=False)
     created_at: datetime
-    update_at: datetime | None = None
+    updated_at: datetime | None = None
     is_active: bool = True
 
     def __post_init__(self) -> None:

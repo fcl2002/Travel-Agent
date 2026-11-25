@@ -50,8 +50,8 @@ async def test_user_routes_lifecycle(client, repository_session):
     response = await client.post("/users", json=PAYLOAD)
     assert response.status_code == 201
     user = response.json()
-    assert set(user) == {"id", "username", "email", "created_at", "update_at", "is_active"}
-    assert user["is_active"] is True and user["update_at"] is None
+    assert set(user) == {"id", "username", "email", "created_at", "updated_at", "is_active"}
+    assert user["is_active"] is True and user["updated_at"] is None
     async with AsyncSession(bind=repository_session.bind, join_transaction_mode="create_savepoint") as session:
         stored = await SQLAlchemyUserRepository(session).get_by_id(UUID(user["id"]))
     assert stored.password_hash.startswith("$argon2id$")
@@ -71,7 +71,7 @@ async def test_user_routes_lifecycle(client, repository_session):
     assert response.status_code == 200
     updated = response.json()
     assert updated["username"] == "updated" and updated["email"] == user["email"]
-    assert updated["created_at"] == user["created_at"] and updated["update_at"] is not None
+    assert updated["created_at"] == user["created_at"] and updated["updated_at"] is not None
     # A second session lets us exercise inactive refresh without revoking the first.
     assert (await client.post("/auth/login", json={"email": PAYLOAD["email"], "password": PAYLOAD["password"]})).status_code == 200
     response = await client.patch(f"{location}/deactivate")
@@ -94,8 +94,8 @@ async def test_user_routes_lifecycle(client, repository_session):
     assert response.status_code == 401
     client.headers["Authorization"] = f"Bearer {reactivated_login.json()['access_token']}"
     reactivated = (await client.get(location)).json()
-    assert reactivated == {**inactive, "is_active": True, "update_at": reactivated["update_at"]}
-    assert datetime.fromisoformat(reactivated["update_at"]) > datetime.fromisoformat(inactive["update_at"])
+    assert reactivated == {**inactive, "is_active": True, "updated_at": reactivated["updated_at"]}
+    assert datetime.fromisoformat(reactivated["updated_at"]) > datetime.fromisoformat(inactive["updated_at"])
     response = await client.post("/auth/refresh", headers={**COOKIE_HEADERS, "Cookie": f"{COOKIE_NAME}={reactivated_cookie}"})
     assert response.status_code == 200
 
@@ -195,8 +195,8 @@ async def test_password_update_requires_authentication_and_hashes_password(clien
     response = await client.patch(location, json={"password": password}, headers=authorization)
     assert response.status_code == 200
     updated = response.json()
-    assert updated == {**user, "update_at": updated["update_at"]}
-    assert updated["update_at"] is not None
+    assert updated == {**user, "updated_at": updated["updated_at"]}
+    assert updated["updated_at"] is not None
     assert "password" not in updated and "password_hash" not in updated
     assert password not in response.text
 
@@ -280,7 +280,7 @@ async def test_failed_reactivation_rolls_back_user_and_sessions(client, reposito
     async with transaction(repository_session):
         user = await SQLAlchemyUserRepository(repository_session).get_by_id(identity.user_id)
         assert user.is_active is False
-        assert user.update_at == datetime.fromisoformat(inactive["update_at"])
+        assert user.updated_at == datetime.fromisoformat(inactive["updated_at"])
         sessions = SQLAlchemyAuthSessionRepository(repository_session)
         assert (await sessions.get_by_id(identity.session_id)).revoked_at is None
         assert await sessions.get_by_id(failed_sessions[0]) is None

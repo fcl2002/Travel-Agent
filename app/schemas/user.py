@@ -72,5 +72,5 @@ class UserRead(BaseModel):
     username: str
     email: str
     created_at: datetime
-    update_at: datetime | None
+    updated_at: datetime | None
     is_active: bool

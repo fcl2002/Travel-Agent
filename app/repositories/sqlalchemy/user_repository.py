@@ -24,7 +24,7 @@ class SQLAlchemyUserRepository(UserRepository):
         return User(
             id=model.id, username=model.username, email=model.email,
             password_hash=model.password_hash, created_at=model.created_at.astimezone(UTC),
-            update_at=model.update_at.astimezone(UTC) if model.update_at is not None else None,
+            updated_at=model.updated_at.astimezone(UTC) if model.updated_at is not None else None,
             is_active=model.is_active,
         )
 
@@ -42,7 +42,7 @@ class SQLAlchemyUserRepository(UserRepository):
         model = UserModel(
             id=user.id, username=user.username, email=user.email,
             password_hash=user.password_hash, created_at=user.created_at,
-            update_at=user.update_at,
+            updated_at=user.updated_at,
             is_active=user.is_active,
         )
         self.session.add(model)
@@ -76,7 +76,7 @@ class SQLAlchemyUserRepository(UserRepository):
         model.email = user.email
         model.password_hash = user.password_hash
         model.is_active = user.is_active
-        model.update_at = datetime.now(UTC)
+        model.updated_at = datetime.now(UTC)
         await self._flush()
         return self._to_entity(model)
 
@@ -85,6 +85,6 @@ class SQLAlchemyUserRepository(UserRepository):
         if model is None:
             raise UserNotFoundError("User not found.")
         model.is_active = False
-        model.update_at = datetime.now(UTC)
+        model.updated_at = datetime.now(UTC)
         await self._flush()
         return self._to_entity(model)

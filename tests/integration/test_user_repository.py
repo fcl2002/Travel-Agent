@@ -24,7 +24,7 @@ async def test_user_lifecycle(repository_session):
     async with transaction(repository_session):
         user = await user_repository.add(new_user())
         assert user.is_active and user.created_at.utcoffset().total_seconds() == 0
-        assert user.update_at is None
+        assert user.updated_at is None
         assert user.password_hash == "already-hashed-password"
         assert user.password_hash not in repr(user)
         assert await user_repository.get_by_username(user.username) == user
@@ -33,19 +33,19 @@ async def test_user_lifecycle(repository_session):
         before_update = datetime.now(UTC)
         updated = await user_repository.update(replace(
             user, username="updated", email="updated@example.com", password_hash="new-hash",
-            created_at=datetime(2000, 1, 1, tzinfo=UTC), update_at=datetime(2000, 1, 1, tzinfo=UTC),
+            created_at=datetime(2000, 1, 1, tzinfo=UTC), updated_at=datetime(2000, 1, 1, tzinfo=UTC),
         ))
-        assert before_update <= updated.update_at <= datetime.now(UTC)
-        assert updated.update_at.utcoffset().total_seconds() == 0
+        assert before_update <= updated.updated_at <= datetime.now(UTC)
+        assert updated.updated_at.utcoffset().total_seconds() == 0
         assert updated == replace(user, username="updated", email="updated@example.com",
-                                  password_hash="new-hash", update_at=updated.update_at)
+                                  password_hash="new-hash", updated_at=updated.updated_at)
         assert await user_repository.get_by_id(user.id) == updated
         another = await user_repository.add(new_user("another", "another@example.com"))
         assert await user_repository.list(limit=1, offset=1) == [another]
         before_deactivation = datetime.now(UTC)
         inactive = await user_repository.deactivate(user.id)
-        assert before_deactivation <= inactive.update_at <= datetime.now(UTC)
-        assert inactive == replace(updated, is_active=False, update_at=inactive.update_at)
+        assert before_deactivation <= inactive.updated_at <= datetime.now(UTC)
+        assert inactive == replace(updated, is_active=False, updated_at=inactive.updated_at)
         assert await user_repository.get_by_id(user.id) == inactive
         assert await user_repository.list() == [inactive, another]
     async with AsyncSession(bind=repository_session.bind, join_transaction_mode="create_savepoint") as session:
@@ -85,15 +85,15 @@ async def test_migration_matches_models_and_can_be_reverted(migrated_database):
     def verify(connection):
         command.check(config)
         command.downgrade(config, "0001_create_users")
-        assert "update_at" not in {column["name"] for column in inspect(connection).get_columns("users")}
+        assert "updated_at" not in {column["name"] for column in inspect(connection).get_columns("users")}
         created_at = datetime(2020, 1, 1, tzinfo=UTC)
         connection.execute(text(
             "INSERT INTO users (id, username, email, password_hash, created_at) "
             "VALUES (:id, 'legacy', 'legacy@example.com', 'hash', :created_at)"
         ), {"id": uuid4(), "created_at": created_at})
         command.upgrade(config, "head")
-        row = connection.execute(text("SELECT created_at, update_at FROM users")).one()
-        assert row.created_at == created_at and row.update_at is None
+        row = connection.execute(text("SELECT created_at, updated_at FROM users")).one()
+        assert row.created_at == created_at and row.updated_at is None
         command.downgrade(config, "base")
         assert "users" not in inspect(connection).get_table_names()
 
