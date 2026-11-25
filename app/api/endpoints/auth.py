@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
-from app.api.dependencies import check_auth_rate_limit, check_cookie_request, get_auth_service
+from app.api.dependencies import check_auth_rate_limit, check_csrf, get_auth_service
 from app.api.auth_cookies import COOKIE_NAME, clear_refresh_cookie, set_refresh_cookie
 from app.core.exceptions import AuthenticationError
 from app.schemas.auth import LoginRequest, TokenResponse
@@ -29,7 +29,7 @@ async def login(
 
 
 @router.post(
-    "/refresh", response_model=TokenResponse, dependencies=[Depends(check_cookie_request)],
+    "/refresh", response_model=TokenResponse, dependencies=[Depends(check_csrf)],
     responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
     summary="Rotate the refresh cookie and issue a new access token",
 )
@@ -50,7 +50,7 @@ async def refresh(request: Request, response: Response, service: Service) -> Tok
 
 
 @router.post(
-    "/logout", status_code=204, dependencies=[Depends(check_cookie_request)],
+    "/logout", status_code=204, dependencies=[Depends(check_csrf)],
     responses={403: {"model": ErrorResponse}}, summary="Revoke this login session and clear its cookie",
 )
 async def logout(request: Request, service: Service) -> Response:

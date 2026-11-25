@@ -81,10 +81,15 @@ async def get_auth_service(
     return AuthService(users, sessions, token_service, refresh_days=get_settings().refresh_token_expire_days)
 
 
-async def check_cookie_request(
+async def check_csrf(
     request: Request,
     requested_with: Annotated[str | None, Header(alias="X-Requested-With")] = None,
 ) -> None:
+    """Block cross-site requests to routes authenticated by the refresh cookie.
+
+    Browsers cannot send X-Requested-With cross-site without CORS approval,
+    and page scripts cannot forge Origin. Add this to any new route that reads the cookie.
+    """
     allowed = {str(request.base_url).rstrip("/")}
     frontend = get_settings().frontend_origin
     if frontend:
