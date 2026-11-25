@@ -8,9 +8,8 @@ The system aims to combine AI agents, ontologies, and external transportation da
 
 > **Status:** This project is currently under development. Suggestions, ideas, and contributions are very welcome. If you have any ideas for improving or expanding the project, feel free to contact me:
 >
-> - Email: `fcostalasmar@gmail.com`
-> - LinkedIn: `https://www.linkedin.com/in/fernando-lasmar`
-> - LinkedIn: `https://www.linkedin.com/in/vivian-fragoso`
+> - LinkedIn: `linkedin.com/in/fernando-lasmar`
+> - LinkedIn: `linkedin.com/in/vivian-fragoso`
 
 ## Backend setup
 
@@ -19,23 +18,31 @@ The backend follows a layered architecture. See
 The command-line agent is kept separately in `agent/`.
 
 Use Python 3.14 (the version used to verify this setup). From the repository root:
-If `.env` already exists, merge the example values into it before running these
-commands; `cp -n` preserves an existing file.
+If `.env` already exists, merge the example values into it before running these commands; `cp -n` preserves an existing file.
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate 
+```
+
+```bash
 python -m pip install -r requirements-dev.txt
 cp -n .env.example .env
-# Generate a signing key only if .env does not already contain one.
+```
+
+Generate a signing key only if .env does not already contain one.
+
+```bash
 python -c "import secrets; from dotenv import dotenv_values, set_key; dotenv_values('.env').get('JWT_SECRET_KEY') or set_key('.env', 'JWT_SECRET_KEY', secrets.token_urlsafe(32))"
+```
+
+```bash
 docker compose up -d --wait db
 python -m alembic upgrade head
 python -m uvicorn app.main:app --reload
 ```
 
-The API is available at `http://127.0.0.1:8000`, with interactive documentation
-at `http://127.0.0.1:8000/docs` and a health check at
+The API is available at `http://127.0.0.1:8000`, with interactive documentation at `http://127.0.0.1:8000/docs` and a health check at
 `http://127.0.0.1:8000/health`.
 
 The backend uses FastAPI, SQLAlchemy asyncio, Uvicorn, Pydantic, pydantic-settings,

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import verify_password
 from app.core.rate_limit import AuthRateLimiter
-from app.api.dependencies import get_auth_limiter, get_token_service
+from app.api.dependencies import get_account_update_limiter, get_auth_limiter, get_token_service
 from app.db.session import get_session, transaction
 from app.main import create_app
 from app.repositories.sqlalchemy.user_repository import SQLAlchemyUserRepository
@@ -27,7 +27,12 @@ def auth_limiter():
 
 
 @pytest.fixture
-def application(repository_session, auth_limiter):
+def account_update_limiter():
+    return AuthRateLimiter()
+
+
+@pytest.fixture
+def application(repository_session, auth_limiter, account_update_limiter):
     app = create_app()
 
     async def session_dependency():
@@ -36,6 +41,7 @@ def application(repository_session, auth_limiter):
 
     app.dependency_overrides[get_session] = session_dependency
     app.dependency_overrides[get_auth_limiter] = lambda: auth_limiter
+    app.dependency_overrides[get_account_update_limiter] = lambda: account_update_limiter
     return app
 
 
@@ -277,6 +283,28 @@ async def test_email_and_password_changes_require_the_current_password(client, r
     response = await client.patch("/users/me", json={"email": "new@example.com",
                                                      "current_password": PAYLOAD["password"]})
     assert response.status_code == 200 and response.json()["email"] == "new@example.com"
+
+
+async def test_account_updates_are_rate_limited_per_user(client, repository_session, account_update_limiter):
+    account_update_limiter.limit = 2
+    login = await register_and_login(client)
+    client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
+    user = (await client.get("/users/me")).json()
+    guess = {"password": "Attacker123!", "current_password": "Wrong password1!"}
+    for _ in range(2):
+        assert (await client.patch("/users/me", json=guess)).status_code == 403
+    response = await client.patch("/users/me", json=guess)
+    assert response.status_code == 429 and int(response.headers["Retry-After"]) > 0
+    async with transaction(repository_session):
+        stored = await SQLAlchemyUserRepository(repository_session).get_by_id(UUID(user["id"]))
+        assert verify_password(PAYLOAD["password"], stored.password_hash)
+
+    # The limit is per account, so another user behind the same IP is unaffected.
+    other = {**PAYLOAD, "username": "another", "email": "another@example.com"}
+    assert (await client.post("/users", json=other)).status_code == 201
+    other_login = await client.post("/auth/login", json={"email": other["email"], "password": other["password"]})
+    headers = {"Authorization": f"Bearer {other_login.json()['access_token']}"}
+    assert (await client.patch("/users/me", json={"username": "renamed"}, headers=headers)).status_code == 200
 
 
 async def test_invalid_password_updates_leave_account_unchanged(client, repository_session):

@@ -109,3 +109,16 @@ async def get_current_user(
     user = await service.get_current_user(credentials.credentials)
     response.headers["Cache-Control"] = "no-store"
     return user
+
+
+@lru_cache
+def get_account_update_limiter() -> AuthRateLimiter:
+    return AuthRateLimiter()
+
+
+async def check_account_update_rate_limit(
+    current_user: Annotated[User, Depends(get_current_user)],
+    limiter: Annotated[AuthRateLimiter, Depends(get_account_update_limiter)],
+) -> None:
+    """Keyed per account: each update can run Argon2, and current_password must not be guessable."""
+    limiter.check(str(current_user.id))

@@ -4,7 +4,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response, status
 
-from app.api.dependencies import check_auth_rate_limit, get_current_user, get_user_service
+from app.api.dependencies import (
+    check_account_update_rate_limit, check_auth_rate_limit, get_current_user, get_user_service,
+)
 from app.models.user import User
 from app.schemas.error import ErrorResponse
 from app.schemas.user import UserCreate, UserRead, UserUpdate
@@ -38,9 +40,9 @@ async def read_current_user(current_user: CurrentUser) -> User:
 
 
 @router.patch(
-    "/me", response_model=UserRead,
-    responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse},
-               403: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    "/me", response_model=UserRead, dependencies=[Depends(check_account_update_rate_limit)],
+    responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse}, 403: {"model": ErrorResponse},
+               409: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
     summary="Update the authenticated account",
     description=(
         "Changing email or password requires current_password. "

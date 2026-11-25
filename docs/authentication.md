@@ -104,6 +104,18 @@ supported with an exact `FRONTEND_ORIGIN`, but mixing `localhost` and `127.0.0.1
 will not work reliably with SameSite cookies. This setup is for same-site frontends;
 an unrelated frontend domain requires a separate cookie/CORS security design.
 
+## Rate limits and accepted risks
+
+Login and registration are limited per client IP. `PATCH /users/me` is limited per
+account (10 per 60 seconds per process) because it can run Argon2 and checks
+`current_password`; excess requests return 429 with `Retry-After`.
+
+Accepted risk: registration reveals whether a username or email is taken (409), so
+account existence can be probed, at the per-IP registration rate. Login does not
+leak this. Closing it requires email-verified registration that answers the same
+way for new and existing emails; revisit when email delivery exists or if the API
+is exposed beyond the internal network.
+
 Old access tokens without session claims require a fresh login after this update.
 Apply `python -m alembic upgrade head` before using the new auth routes.
 
