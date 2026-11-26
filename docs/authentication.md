@@ -110,6 +110,12 @@ Login and registration are limited per client IP. `PATCH /users/me` is limited p
 account (10 per 60 seconds per process) because it can run Argon2 and checks
 `current_password`; excess requests return 429 with `Retry-After`.
 
+Behind a gateway, set `FORWARDED_ALLOW_IPS` to the gateway's exact IP or CIDR.
+Otherwise every request appears to come from the gateway, all clients share one
+login limit, and 10 failed logins lock everyone out. Never use `*`: any client
+could then spoof `X-Forwarded-For` and bypass the limit. Limits are per process,
+so multiple workers or replicas also need a shared limit at the gateway.
+
 Accepted risk: registration reveals whether a username or email is taken (409), so
 account existence can be probed, at the per-IP registration rate. Login does not
 leak this. Closing it requires email-verified registration that answers the same
@@ -118,6 +124,3 @@ is exposed beyond the internal network.
 
 Old access tokens without session claims require a fresh login after this update.
 Apply `python -m alembic upgrade head` before using the new auth routes.
-
-References: [refresh-token rotation and replay detection (RFC 9700)](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14.2),
-[browser cookie attributes (MDN)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie).
