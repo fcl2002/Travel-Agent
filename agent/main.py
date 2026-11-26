@@ -6,7 +6,7 @@ from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 from tools import tools, tool_node
 from datetime import date
-import httpx
+from groq import RateLimitError
 
 load_dotenv()
 
@@ -43,17 +43,15 @@ def travel_agent(state: MessagesState):
         return {
             "messages": [response]
         }
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 429:
-            return {
-                "messages": [
-                    {
-                        "role": "assistant",
-                        "content": "Mistral rate limit exceeded. Please try again shortly"
-                    }
-                ]
-            }
-        raise
+    except RateLimitError:
+        return {
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": "Groq rate limit exceeded. Please try again shortly."
+                }
+            ]
+        }
 
 builder = StateGraph(MessagesState)
 
