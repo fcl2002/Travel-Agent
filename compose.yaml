@@ -16,6 +16,7 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       REFRESH_COOKIE_SECURE: ${REFRESH_COOKIE_SECURE:-true}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-}
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1,::1}
     depends_on:
       db:
         condition: service_healthy

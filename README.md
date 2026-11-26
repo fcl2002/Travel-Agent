@@ -170,7 +170,10 @@ Login and registration share a per-IP limit of 10 attempts per 60 seconds per
 process; excess attempts return 429 and `Retry-After`. This limiter is bounded and
 local to a worker. Production must use HTTPS and enforce a shared limit at the
 trusted gateway if running multiple workers or instances. Forwarded client IPs
-must only be trusted from your own proxy. Rotating the signing key invalidates
+must only be trusted from your own proxy: set `FORWARDED_ALLOW_IPS` to the gateway's
+exact IP or CIDR. Otherwise every request appears to come from the gateway, all
+clients share one limit, and 10 failed logins lock everyone out. Never use `*`: any
+client could then spoof `X-Forwarded-For` and bypass the limit. Rotating the signing key invalidates
 all previously issued access and refresh tokens. Tokens from before the session
 implementation require a new login because they do not have a session ID.
 
