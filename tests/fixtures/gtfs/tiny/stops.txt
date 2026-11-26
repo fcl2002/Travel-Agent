@@ -1,0 +1,6 @@
+stop_id,stop_name,stop_lat,stop_lon
+P1,Paris Bercy,48.83,2.38
+P2,Paris Orly,48.72,2.36
+L1,Lyon Perrache,45.74,4.82
+N1,Nice Vauban,43.70,7.28
+V1,Venice Tronchetto,45.44,12.30

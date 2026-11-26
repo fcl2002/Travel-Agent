@@ -1,0 +1,90 @@
+{
+  "blablacar": {
+    "paris": [
+      "Champigny-sur-Marne",
+      "Chessy South Bus Station",
+      "Paris - Avenue de France",
+      "Paris - Bercy-Seine Bus Station",
+      "Paris - CDG Roissypole Bus Station",
+      "Paris - La Défense Jules Verne Terminal",
+      "Paris - Massy-Palaiseau Vilmorin Bus",
+      "Paris - Pershing-Porte Maillot Bus Station",
+      "Paris - Pont de Levallois",
+      "Paris - Pont de Sèvres",
+      "Paris - St-Denis Université Bus Station",
+      "Paris Vincennes - Avenue Dausmenil",
+      "Paris-Orly Airport - Orly Parking Cars de groupe 1",
+      "Paris-Orly Airport - Orly Parking Cars de groupe 4"
+    ],
+    "nice": [
+      "Nice - Airport Bus Station Terminal 1",
+      "Nice Vauban - Bus Station"
+    ],
+    "lyon": [
+      "Lyon - Bellecour",
+      "Lyon - Dardilly",
+      "Lyon - Gerland Bus Station",
+      "Lyon - Gerland Stop relocation",
+      "Lyon - St. Exupéry Airport T1 Bus Stop"
+    ],
+    "marseille": [
+      "Marseille - Fourragère",
+      "Marseille - Saint Antoine",
+      "Marseille - Saint-Charles Bus Station",
+      "Marseille Provence Airport"
+    ],
+    "bordeaux": [
+      "Bordeaux - Belcier Bus Stop",
+      "Bordeaux - Paludate Bus Stop",
+      "Bordeaux Pessac"
+    ],
+    "toulouse": [
+      "Toulouse - Blagnac Airport Bus Station",
+      "Toulouse - Matabiau Bus Station"
+    ],
+    "mont-saint-michel": [
+      "Mont-Saint-Michel"
+    ]
+  },
+  "flixbus": {
+    "paris": [
+      "Disneyland Paris - Chessy Sud",
+      "Paris (Bercy Seine)",
+      "Paris (Pershing - Porte Maillot)",
+      "Paris (Pont de Levallois)",
+      "Paris (Pont de Sèvres)",
+      "Paris (Saint-Denis University)",
+      "Paris - Champigny-sur-Marne (Halte Routière)",
+      "Paris - Massy-Palaiseau",
+      "Paris - Orly Airport",
+      "Paris Charles de Gaulle Airport (Central Bus Station)",
+      "Paris La Défense (Terminal Jules Verne)"
+    ],
+    "nice": [
+      "Nice (Vauban Bus Station)",
+      "Nice Airport (Bus Station - Terminal 1)"
+    ],
+    "lyon": [
+      "Lyon (Bellecour)",
+      "Lyon (Gerland Bus Station)",
+      "Lyon Saint-Exupéry Airport"
+    ],
+    "marseille": [
+      "Marseille (Saint-Antoine)",
+      "Marseille (Saint-Charles)",
+      "Marseille Airport (Bus Station)"
+    ],
+    "bordeaux": [
+      "Bordeaux (Floirac Dravemont)",
+      "Bordeaux (Pessac)",
+      "Bordeaux (Saint-Jean - Paludate)"
+    ],
+    "toulouse": [
+      "Toulouse (Blagnac Airport)",
+      "Toulouse (Central Bus Station Pierre Sémard)"
+    ],
+    "mont-saint-michel": [
+      "Le Mont Saint-Michel"
+    ]
+  }
+}

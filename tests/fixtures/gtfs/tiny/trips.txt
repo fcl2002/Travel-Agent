@@ -1,0 +1,8 @@
+route_id,service_id,trip_id
+BUS1,DAILY,night
+BUS1,WEEKEND,day
+BUS1,DAILY,after_midnight
+TRAIN1,DAILY,rail
+TRAIN1,DAILY,no_drop_off
+BUS1,DAILY,no_pickup
+BUS1,DAILY,reverse
